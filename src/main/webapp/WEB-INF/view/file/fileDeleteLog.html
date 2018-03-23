@@ -1,0 +1,149 @@
+<!doctype html>
+<#include "/common/lib.ftl">
+    <html>
+    <head>
+        <base href="${base}"></base>
+        <meta charset="utf-8"/>
+        <title>文件删除日志</title>
+        <link rel="stylesheet" type="text/css" href="dev/css/themes/default/easyui.css"/>
+        <link rel="stylesheet" type="text/css" href="dev/css/main.css"/>
+        <script type="text/javascript" src="dev/js/jquery.min.js"></script>
+        <script type="text/javascript" src="dev/js/jquery.easyui.min.js"></script>
+        <script type="text/javascript" src="dev/js/locale/easyui-lang-zh_CN.js"></script>
+
+
+
+    </head>
+    <body>
+    <div class="easyui-layout" data-options="fit:true" style="">
+        <div data-options="region:'north',border:false" style="height:40px;padding:10px;">
+            <div class="sitem">
+                <label>文件名：</label><input name="name" id="fileName${rand}" type="text" class="easyui-validatebox"/>
+                <label>删除时间：</label>
+                <input name="name" id="time${rand}" type="text" class="easyui-validatebox"/>
+            </div>
+            <a id="search${rand}" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+        </div>
+        <div data-options="region:'center',border:false" style="padding:10px;">
+            <table id="tb${rand}"></table>
+        </div>
+    </div>
+
+
+    <div id="upload-${rand}" class="easyui-dialog" title="上传附件"
+         data-options="iconCls:'icon-save',resizable:true,width:708,height:544,modal:true,closed:true,
+        	buttons: [{
+                    text:'完成',
+                    iconCls:'icon-ok',
+                    handler: closeUploadDiag${rand}
+                }]
+        ">
+        <div id="uploader${rand}" class="fileUploader">
+            <div id="fileList${rand}" class="uploader-list"></div>
+            <table style="width: 100%;text-align: center;padding-top: 20px;">
+                <tr>
+                    <td align="right"><div id="filePicker${rand}">选择文件</div></td>
+                    <td align="left"><a id="ctlBtn${rand}" href="javascript:void(0)" class='btn'>开始上传</a></td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        var tb;
+        function closeUploadDiag${rand}(){
+            $('#upload-${rand}').dialog('close');
+            tb.edatagrid('load', {
+                name: $('#fileName${rand}').val()
+            });
+        }
+
+
+        $(function () {
+            tb = $('#tb${rand}');
+            var btn = $('#search${rand}');
+
+            btn.bind('click', function () {
+                tb.edatagrid('load', {
+                    name: $('#fileName${rand}').val()
+                });
+            });
+
+            function remove() {
+                tb.edatagrid('destroyRow');
+            }
+
+
+            $("#upload-${rand}").dialog({
+                onClose: function () {
+                    tb.edatagrid('load', {
+                        name: $('#fileName${rand}').val()
+                    });
+                }
+            });
+
+            tb.edatagrid({
+                    fit: true,
+                    idField: 'id',
+                    pagination: true,
+                    fitColumns: false,
+                    columns: [[
+                        {field: 'id', checkbox: true},
+                        {field: 'fileName', title: '文件名',width:190},
+                        {field: 'remark', title: '所属系统'},
+                        {field: 'systemCode', title: '系统编码',width:0,hidden:true},
+                        {field: 'fileMd5', title: 'md5'},
+                        {
+                            field: 'fileSize', title: '文件大小',
+                            formatter: function (value) {
+                                return (value).formatSize();
+                            }
+                        },
+                        {field: 'fileRefer', title: '文件引用'},
+                        {field: 'filePath', title: '存放路径', width:330},
+                        {field: 'deleteTime', title: '删除时间'},
+                        {field: 'operate', title: '操作',
+                            formatter: function (value, row) {
+                            return '<a class="recover-${rand}" data-id='+row.id+' href="javascript:void(0)">恢复</a>';
+                        }}
+                    ]],
+                    url: 'fileDeleteLog/list.json',
+                    destroyUrl: 'fileDeleteLog/remove.json',
+                    onError: function (index, data) {
+                        $.messager.alert('错误', data.message);
+                    },
+                    onLoadSuccess: function (data) {
+
+
+                        //恢复
+                        $(".recover-${rand}").click(function () {
+                            var idx = $(this).attr("data-id");
+                            uploader${rand}.deleteFileId = idx;
+                            $('#upload-${rand}').dialog('open');
+                        });
+
+
+                    },
+                <@toolbar 'file_delete_log' />
+            });
+
+            var gnifUpload${rand} = new GnifFileUpload();
+
+            var uploader${rand} = gnifUpload${rand}.init(
+                "js/fileupload/Uploader.swf",
+                "filePicker${rand}",
+                "fileList${rand}",
+                "ctlBtn${rand}",
+                "upload-${rand}",
+                null,
+                '${base}'
+            );
+
+
+
+        });
+
+    </script>
+    </body>
+    </html>

@@ -1,0 +1,204 @@
+<!doctype html>
+<#include "/common/lib.ftl">
+    <html>
+    <head>
+        <base href="${base}"></base>
+        <meta charset="utf-8"/>
+        <title></title>
+        <link rel="stylesheet" type="text/css" href="css/themes/default/easyui.css"/>
+        <link rel="stylesheet" type="text/css" href="css/themes/icon.css"/>
+        <link rel="stylesheet" type="text/css" href="css/gnif.css"/>
+        <link rel="stylesheet" type="text/css" href="css/myicon.css"/>
+        <link rel="shortcut icon" href="http://shop.gionee.com/favicon.ico" type="image/x-icon">
+        <link rel="stylesheet" type="text/css" href="css/fileupload/webuploader.css"/>
+        <link rel="stylesheet" type="text/css" href="css/fileupload/fileupload.css"/>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="js/jquery.easyui.min.js"></script>
+        <script type="text/javascript" src="js/locale/easyui-lang-zh_CN.js"></script>
+        <script type="text/javascript" src="js/jquery.edatagrid.js"></script>
+        <script type="text/javascript" src="js/gnif.js"></script>
+        <script type="text/javascript" src="js/fileupload/webuploader.js"></script>
+        <script type="text/javascript" src="js/fileupload/fileupload.js?rand=${rand}"></script>
+        <script type="text/javascript" src="js/clipboard/clipboard.min.js"></script>
+    </head>
+    <body class="easyui-layout">
+    <div data-options="region:'north',border:false" style="height:65px;">
+        <table width="100%" border="0" cellpadding="0" cellspacing="0"
+               background="image/bg.jpg" height="60">
+            <tr>
+                <td width="683" style="background-image:url(image/bg.jpg)">
+                    <img src="image/bg.jpg" width="450" height="60"/>
+                </td>
+                <td valign="middle" width="100%" align="right">
+                    欢迎，${appuser.name}&nbsp;&nbsp;来到文件服务
+                    <a href="j_spring_cas_security_logout">退出</a>&nbsp;&nbsp;
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div data-options="region:'north',border:false" style="height:30px;background:#eeeeff;">
+    </div>
+    <div data-options="region:'west',border:false,split:true,title:'功能列表'" style="width:200px;margin-left:10px;"
+         id="itsm-menu">
+        <ul id="gnif-menu" class="easyui-tree">
+            <@menu 0 />
+        </ul>
+    </div>
+    <div data-options="region:'center',border:false" style="padding:5px;">
+        <div id="gnif-tab" class="easyui-tabs" data-options="fit:true,border:false,plain:true">
+            <div title="日志统计" data-options="closable:true,iconCls:'icon-history'">
+                <div id="pp" style="position:relative">
+                    <div style="width:98%;margin:20px 0 0 10px;">
+                        <div id="historyDateLog${rand}" class="easyui-panel" title="历史日志" data-options="tools:'#historyDateLogTool${rand}',collapsible:true,closable:true" iconCls="icon-waittask" style="height:340px;padding:0px;">
+                            <div id="historyDateLog-${rand}"></div>
+                        </div>
+                    </div>
+                    <div style="width:98%;margin:20px 0 0 10px;">
+                        <div id="machineVolume${rand}" class="easyui-panel" title="文件服务信息" data-options="tools:'#machineVolumeTool${rand}',collapsible:true,closable:true" iconCls="icon-waittask" style="height:250px;padding:0px;">
+                            <div id="machineVolume-${rand}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyDateLogTool${rand}">
+        <a id="historyDateLogRef${rand}" href="javascript:void(0)" class="icon-reload"></a>
+    </div>
+
+    <div id="machineVolumeTool${rand}">
+        <a id="machineVolumeRef${rand}" href="javascript:void(0)" class="icon-reload"></a>
+    </div>
+    </div>
+    </body>
+    </html>
+    <script>
+        Date.prototype.format = function(fmt) {
+            var o = {
+                "M+" : this.getMonth()+1,                 //月份
+                "d+" : this.getDate(),                    //日
+                "h+" : this.getHours(),                   //小时
+                "m+" : this.getMinutes(),                 //分
+                "s+" : this.getSeconds(),                 //秒
+                "q+" : Math.floor((this.getMonth()+3)/3), //季度
+                "S"  : this.getMilliseconds()             //毫秒
+            };
+            if(/(y+)/.test(fmt)) {
+                fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));
+            }
+            for(var k in o) {
+                if(new RegExp("("+ k +")").test(fmt)){
+                    fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+                }
+            }
+            return fmt;
+        }
+
+        Number.prototype.formatSize =  function() {
+            var sizeText;
+            if (this.toString() / 1024 / 1024 / 1024 > 1) {
+                sizeText = parseFloat(this.toString() / 1024 / 1024 / 1024).toFixed(2) + "Gb";
+            } else if (this.toString() / 1024 / 1024 > 1) {
+                sizeText = parseFloat(this.toString() / 1024 / 1024).toFixed(2) + "Mb";
+            } else if (this.toString() / 1024 > 1) {
+                sizeText = parseFloat(this.toString() / 1024).toFixed(2) + "Kb";
+            } else {
+                sizeText = parseFloat(this.toString()).toFixed(2) + "b";
+            }
+            return sizeText;
+        }
+
+
+
+        $(function () {
+
+            //init Personal Grid
+            $('#historyDateLog-${rand}').datagrid({
+                fitColumns:false,
+                url:'./getHistoryOssDateLog.html',
+                columns:[[
+                    {field:'upload',title:'上传永久文件数',width:130},
+                    {field:'uploadTmp',title:'上传临时文件数',width:130},
+                    {field:'download',title:'下载文件数',width:130},
+                    {field:'delete',title:'删除文件数',width:130},
+                    {field:'clear',title:'清空文件数',width:130},
+                    {field:'totalUpload',title:'总上传文件数',width:130,
+                        formatter: function(value,row){
+                            return row.upload + row.uploadTmp;
+                        }
+                    },
+                    {field:'totalDelete',title:'总删除文件数',width:130,
+                        formatter: function(value,row){
+                            return row.delete + row.clear;
+                        }
+                    },
+                    {field:'date',title:'日期',width:130,align:'center',
+                        formatter: function(value){
+                            if(value.split(" ")[0] == new Date().format("yyyy-MM-dd"))
+                                return '今天'
+                            return value.split(" ")[0];
+                        }
+                    }
+
+                ]],
+                nowrap: true,
+                fit : true,
+                border : true,
+                pagination:true,
+                pageNumber:1,
+                pageSize:10,
+                rownumbers:true,
+                singleSelect:true
+            });
+
+            $('#historyDateLogRef${rand}').click(function(){
+                $('#historyDateLog-${rand}').datagrid('reload');
+            });
+
+            $('#machineVolumeRef${rand}').click(function(){
+                $('#historyDateLog-${rand}').datagrid('reload');
+            });
+
+            $('#machineVolume-${rand}').datagrid({
+                fitColumns:false,
+                url:'./getMachineVolume.html',
+                columns:[[
+                    {field:'usableSpace',title:'可用空间大小',width:196,align:'center',
+                        formatter: function(val){
+                            return (val).formatSize();
+                        }
+                    },
+                    {field:'usedSpace',title:'已用空间大小',width:196,align:'center',
+                        formatter: function(val,row){
+                            return (row.totalSpace - row.usableSpace).formatSize();
+                        }
+                    },
+                    {field:'totalSpace',title:'总空间大小',width:196,align:'center',
+                        formatter: function(val){
+                            return (val).formatSize();
+                        }
+                    },
+                    {field:'maxFileSize',title:'最大文件大小',width:196,align:'center',
+                        formatter: function(val){
+                            return (val).formatSize();
+                        }
+                    },
+                    {field:'avgFileSize',title:'平均文件大小',width:196,align:'center',
+                        formatter: function(val){
+                            return (val).formatSize();
+                        }
+                    },
+                    {field:'fileCount',title:'文件总数',width:199,align:'center'}
+                ]],
+                nowrap: true,
+                fit : true,
+                border : true,
+                pagination:false,
+                singleSelect:true
+            });
+
+
+
+        });
+    </script>

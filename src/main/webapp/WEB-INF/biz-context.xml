@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/tx
+            http://www.springframework.org/schema/tx/spring-tx.xsd
+			http://www.springframework.org/schema/cache
+			http://www.springframework.org/schema/cache/spring-cache.xsd
+			http://www.springframework.org/schema/task
+			http://www.springframework.org/schema/task/spring-task.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder location="classpath:app.properties"/>
+    <context:component-scan
+            base-package="com.gionee.oss.task,com.gionee.oss.constant,com.gionee.oss.biz.service.impl,com.gionee.archetype.gnifweb.biz.service.impl,com.gionee.devtool.biz.service.impl,com.gionee.auth.impl"/>
+
+    <!--<cache:annotation-driven cache-manager="cacheManager"/>-->
+
+    <!--任务调度池-->
+    <task:annotation-driven executor="gnifExecutor" scheduler="gnifScheduler"/>
+    <task:executor id="gnifExecutor" pool-size="15"/>
+    <task:scheduler id="gnifScheduler" pool-size="3"/>
+
+    <!--任务线程池-->
+    <bean id="threadPool" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <!-- 核心线程数  -->
+        <property name="corePoolSize" value="3"/>
+        <!-- 最大线程数 -->
+        <property name="maxPoolSize" value="8"/>
+        <!-- 队列最大长度 -->
+        <property name="queueCapacity" value="600"/>
+        <!-- 线程池维护线程所允许的空闲时间 -->
+        <property name="keepAliveSeconds" value="500"/>
+        <!-- 线程池对拒绝任务(无线程可用)的处理策略 -->
+        <property name="rejectedExecutionHandler">
+            <bean class="java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy"/>
+        </property>
+    </bean>
+
+    <!-- 声明cacheManager -->
+    <!--<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">-->
+        <!--<property name="cacheManager">-->
+            <!--<bean class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">-->
+                <!--<property name="configLocation" value="/WEB-INF/ehcache.xml"/>-->
+            <!--</bean>-->
+        <!--</property>-->
+    <!--</bean>-->
+
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!-- 用于在实现 Service 的时候进行数据校验 -->
+
+
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="testWhileIdle" value="true"/>
+        <property name="validationQuery" value="select 1"/>
+        <property name="minEvictableIdleTimeMillis" value="1800000"/>
+        <property name="removeAbandonedTimeout" value="180"/>
+        <property name="removeAbandoned" value="true"/>
+    </bean>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configLocation" value="/WEB-INF/mybatis-config.xml"/>
+        <property name="dataSource" ref="dataSource"/>
+        <property name="typeAliasesPackage" value="com.gionee.oss.biz.model"/>
+        <property name="mapperLocations" value="classpath:com/gionee/oss/integration/dao/*.xml"></property>
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage"
+                  value="com.gionee.oss.integration.dao,com.gionee.devtool.integration.dao,com.gionee.auth.dao,com.gionee.gnif.dao"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    </bean>
+
+    <!--<bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">-->
+        <!--<property name="providerClass" value="org.hibernate.validator.HibernateValidator"/>-->
+    <!--</bean>-->
+    <!---->
+    <!--&lt;!&ndash; plugins &ndash;&gt;-->
+
+    <bean class="com.gionee.gnif.GnifConfig">
+        <property name="databaseSchemaUpdate" value="true"/>
+        <property name="environment" value="${env.gnif}"/>
+    </bean>
+
+    <bean class="com.gionee.auth.AuthConfig">
+        <property name="databaseSchemaUpdate" value="true"/>
+        <property name="environment" value="${env.auth}"/>
+    </bean>
+
+    <bean id="idGenerator" class="com.gionee.gnif.util.impl.DatabaseIDGenerator"/>
+
+    <bean id="devTool" class="com.gionee.devtool.DevToolConfig">
+        <property name="modelType" value="business"/>
+        <property name="codeBasePackage" value="com.gionee.dev"/>
+    </bean>
+
+
+    <!-- oss config -->
+
+    <bean id="fileService" class="com.gionee.oss.biz.service.impl.OssCoreUploadFileServiceImpl"></bean>
+
+    <bean id="fileSysOuterConfig" class="com.gionee.oss.constant.FileSysOuterConfig" init-method="init">
+        <property name="fileService" ref="fileService"></property>
+        <property name="rootPath" value="${file.chunk.tmpPath}"></property>
+        <property name="sizeThreshold" value="${file.chunk.sizeThreshold}"></property>
+        <property name="fileSizeMax" value="${file.chunk.fileSizeMax}"></property>
+        <property name="systemRootPath" value="${system.rootPath}"></property>
+    </bean>
+
+    <bean class="com.gionee.oss.cache.SystemKeyCache" init-method="init" depends-on="fileSysOuterConfig" />
+    <bean class="com.gionee.oss.util.VerifyUtil"/>
+    <bean class="com.gionee.oss.util.UploadUtil"/>
+
+</beans>

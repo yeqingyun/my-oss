@@ -1,0 +1,504 @@
+<#assign title="流程"> <#include "/common/head.ftl">
+    <style type="text/css">
+        .list {
+            font-size: 13px;
+            text-align: left;
+            line-height: 20px;
+            list-style-type: demical;
+            margin: 0px;
+            padding: 5px 10px 10px 15px;
+        }
+    </style>
+    <div class="easyui-layout" data-options="fit:true">
+        <div data-options="region:'center',border:true,split:true"
+             style="padding: 0px 0px 0px 0px">
+            <div id="processGrid"></div>
+        </div>
+
+        <div id="south${rand}"
+             data-options="region:'south',iconCls:'icon-process_desc',title:'流程描述',split:true,border:true"
+             style="height: 300px; padding: 5px 10px 10px 0px;"></div>
+    </div>
+
+
+    <!-- win -->
+    <div id="win-${rand}" class="easyui-dialog" title="Dialog"
+         style="overflow: visible; width: 1010px; height: 500px; padding: 10px"
+         data-options="
+	   modal:true,
+	   closed:true,
+	   cache: false,
+	   maximizable:true,
+	   onMaximize:winOnMax${rand},
+	   onRestore:winOnRestore${rand},
+	   toolbar: [{
+		 text:'提交表单',
+		 handler: commitForm${rand},
+		 iconCls:'icon-save'
+	   },{
+		 text:'添加附件',
+		 handler: addAttache${rand},
+		 iconCls:'icon-add'
+	   }]
+	 ">
+        <div id="formPanel-${rand}" class="easyui-panel"
+             data-options="fit:true,border:false,width:965"
+             style="overflow: yes; padding: 0px;" title=""></div>
+        <br />
+        <div id="attchFilePanel-${rand}" class="easyui-panel"
+             data-options="border:false,width:965,closed:true" title="">
+            <div id="attchFileGrid-${rand}"></div>
+        </div>
+    </div>
+
+
+    <div id="upload-${rand}" class="easyui-dialog" title="上传附件"
+         data-options="iconCls:'icon-save',resizable:true,width:708,height:544,modal:true,closed:true,
+        	buttons: [{
+                    text:'完成',
+                    iconCls:'icon-ok',
+                    handler: closeUploadDiag${rand}
+                }]">
+
+
+        <div id="uploader${rand}" class="fileUploader">
+            <div id="fileList${rand}" class="uploader-list"></div>
+            <table style="width: 100%;text-align: center;padding-top: 20px;">
+                <tr>
+                    <td align="right"><div id="filePicker${rand}">选择文件</div></td>
+                    <td align="left"><a id="ctlBtn${rand}" href="javascript:void(0)" class='btn'>开始上传</a></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div id="showProcessImageWin-${rand}"></div>
+
+    <script type="text/javascript">
+        var process_key = null;
+        var process_name = null;
+        $('#processGrid').datagrid({
+            fitColumns:true,
+            url:"myflow/processDefinitionDetail.json",
+            queryParams:{
+                processDefinitionId:'${processDefId}'
+            },
+            columns:[[
+                {field:'name',title:'名称',width:100},
+                {field:'id',title:'编号',hidden:true,checkbox:false},
+                {field:'key',title:'代码',width:100},
+                {field:'version',title:'版本',width:100}
+            ]],
+            rownumbers:true,
+            nowrap: true,
+            fit : true,
+            border : false,
+            pagination:false,
+            pageNumber : 1,
+            pageSize : 20,
+            onLoadSuccess:function(data){
+                process_key = data.rows[0].id;
+                process_name = data.rows[0].name;
+                //clear
+                $("#south${rand}").empty();
+                //load remark
+                var html = '<ul class="list">';
+                html += data.rows[0].description != null ? data.rows[0].description :'';
+                html += '</ul>';
+                $('#south${rand}').append(html);
+
+                //清空文件列表
+                var item = $('#fileList${rand}').datagrid('getRows');
+                if (item) {
+                    for (var i = item.length - 1; i >= 0; i--) {
+                        var index = $('#fileList${rand}').datagrid('getRowIndex', item[i]);
+                        GnifFileUpload.removeFileFromQueue(uploader${rand},item[i]['fileId']);
+                        $('#fileList${rand}').datagrid('deleteRow', index);
+                    }
+                }
+
+
+                //清空file数据
+                var item = $('#attchFileGrid-${rand}').datagrid('getRows');
+                if (item) {
+                    for (var i = item.length - 1; i >= 0; i--) {
+                        var index = $('#attchFileGrid-${rand}').datagrid('getRowIndex', item[i]);
+                        $('#attchFileGrid-${rand}').datagrid('deleteRow', index);
+                    }
+                }
+
+                GnifFileUpload.btnInit("ctlBtn${rand}",uploader${rand});
+
+            },
+            toolbar: [{
+                text : '发起流程',
+                iconCls: 'icon-start',
+                handler: startProcss${rand}
+        },"-",{
+            text : '流程图',
+            iconCls: 'icon-history',
+            handler: showProcessImage${rand}
+        }],
+        onDblClickRow:function(rowIndex, rowData){
+            startProcss${rand}();
+        }
+        });
+
+        //显示启动流程表单
+        function startProcss${rand}(){
+            $.post("sysprocess/validatePermissionCrowd.json",
+                {
+                    account:'${appuser.account}',
+                    processDefKey:process_key
+                },
+                function(data){
+                    if (!data.success) {
+                        $.messager.alert('信息提示', data.msg,'error');
+                    } else {
+                        $('#win-${rand}').dialog('setTitle', '办理任务[' + process_name + ']');
+
+                        $('#win-${rand}').dialog('open');
+
+                        $('#formPanel-${rand}').panel('refresh', 'sysprocess/start/form.html?procdefId=' + process_key);
+                    }
+                });
+
+        }
+
+        function commitForm${rand}() {
+            $.messager.progress();
+            var div = $('#win-${rand}');
+            var startForm = div.find("form[id^='startForm']");
+            var count=0;
+            startForm.form('submit', {
+                url: 'sysprocess/create/startProcess.html?processDefId=' + process_key,
+                onSubmit: function(param) {
+                    //var columnTitles = $('#productGrid').datagrid('getColumnFields');
+                    //$.each(rows, function(i, d){
+                    //	$.each(columnTitles, function(ci, cd){
+                    //		param['data['+ i +'].'+ cd] = d[cd];
+                    //	});
+                    //});
+                    startForm.find("input[name='fp_reqChannels']:checkbox").each(function(){
+                        count=1;
+                    });
+                    if(startForm.find("input[name='fp_reqChannels']:checkbox").is(":checked")==false && count==1){
+                        $.messager.alert('信息提示','招聘途径至少选一项!');
+                        $.messager.progress('close');
+                        return false;
+                    }
+
+                    var n=process_key.indexOf(":");
+                    var proName=process_key.substr(0,n);
+                    if(proName=='M-FixedAssets-Detraction'){
+                        var index=startForm.find("input[name='fp_rows']").val();
+                        //var scrapWay=startForm.find("input[name='fp_scrapWay']:checked").val();
+                        if(index==0){
+                            $.messager.alert('信息提示','资产报废清单不可以为空!');
+                            $.messager.progress('close');
+                            return false;
+                        }
+                    }
+
+                    if(proName=='M-NonProduction-Materials'){
+                        var index=startForm.find("input[name='fp_rows']").val();
+                        var scrapWay=startForm.find("input[name='fp_scrapWay']:checked").val();
+                        if(index==0){
+                            $.messager.alert('信息提示','非生产物资清单不可以为空!');
+                            $.messager.progress('close');
+                            return false;
+                        }
+                        var noProducs='';
+                        if(scrapWay=='1'){
+                            noProducs=startForm.find("input[name='fp_MFixedAssetsDetraction']").val();
+                        }else{
+                            noProducs=startForm.find("input[name='fp_scrapWay2JsonStr']").val();
+                        }
+                        if(noProducs!=''){
+                            var json=eval("("+noProducs+")");
+                            for(var i=0;i<json.accessoryData.length;i++){
+                                if(json.accessoryData[i].courseAllot=='K'){
+                                    if(json.accessoryData[i].costCenter==''||json.accessoryData[i].costCenter==null||json.accessoryData[i].costCenter==undefined){
+                                        $.messager.alert('信息提示','科目分配为K时，成本中心不可为空!');
+                                        $.messager.progress('close');
+                                        return false;
+                                    }
+                                    if(json.accessoryData[i].itemGroup==''||json.accessoryData[i].itemGroup==null||json.accessoryData[i].itemGroup==undefined){
+                                        $.messager.alert('信息提示','科目分配为K时，物料组不可为空!');
+                                        $.messager.progress('close');
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if(proName=='M-Equipment-Maintain'){
+                        var scrapWay=startForm.find("input[name='fp_scrapWay']:checked").val();
+                        var equipment='';
+                        if(scrapWay=='1'){
+                            equipment=startForm.find("input[name='fp_MFixedAssetsDetraction']").val();
+                        }else{
+                            equipment=startForm.find("input[name='fp_scrapWay2JsonStr']").val();
+                        }
+                        if(equipment!=''&&equipment!=undefined){
+                            var json=eval("("+equipment+")");
+                            for(var i=0;i<json.accessoryData.length;i++){
+                                if(json.accessoryData[i].courseAllot=='K'){
+                                    if(json.accessoryData[i].costCenter==''||json.accessoryData[i].costCenter==null||json.accessoryData[i].costCenter==undefined){
+                                        $.messager.alert('信息提示','科目分配为K时，成本中心不可为空!');
+                                        $.messager.progress('close');
+                                        return false;
+                                    }
+                                    if(json.accessoryData[i].itemGroup==''||json.accessoryData[i].itemGroup==null||json.accessoryData[i].itemGroup==undefined){
+                                        $.messager.alert('信息提示','科目分配为K时，物料组不可为空!');
+                                        $.messager.progress('close');
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    var validateResult = $(this).form('enableValidation').form('validate');
+                    if (validateResult) {
+                        if(proName=='M-Equipment-Maintain' || proName=='M-NonProduction-Materials'){
+                            var proofType='';
+                            if(proName=='M-Equipment-Maintain'){
+                                proofType=startForm.find("select[name='fp_proofType']").val()+"#"+startForm.find("input[name='fp_factory']").val();
+                            }else{
+                                proofType=startForm.find("select[name='fp_proofType']").val();
+                            }
+                            var scrapWay=startForm.find("input[name='fp_scrapWay']:checked").val();
+                            var noProducs='';
+                            if(scrapWay=='1'){
+                                noProducs=startForm.find("input[name='fp_MFixedAssetsDetraction']").val();
+                            }else{
+                                noProducs=startForm.find("input[name='fp_scrapWay2JsonStr']").val();
+                            }
+                            var flag=true;
+                            if(noProducs!=''&&noProducs!=undefined){
+                                $.ajax({
+                                    type: "post",
+                                    url: "hrFlow/checkNonProdMaterInfoToSap.json",
+                                    cache: false,
+                                    async: false,  //设置同步
+                                    dataType: "json",
+                                    data: {proName:proName,
+                                        proofType:proofType,
+                                        noProducs:noProducs},
+                                    success: function (data) {
+                                        if(!data.success){
+                                            $.messager.alert("提示信息",data.msg);
+                                            flag=false;
+                                        }
+                                    }
+                                });
+                            }
+                            if(!flag){
+                                $.messager.progress('close');
+                                return false
+                            }
+                        }
+
+                        if ($('#attchFileGrid-${rand}').length > 0) {
+                            var rows = $('#attchFileGrid-${rand}').datagrid('getRows');
+                            $.each(rows, function(i, d){
+                                param['attch_' + i] = d.fileNo + "_" + d.fileName;
+                            });
+                        }
+                    } else {
+                        $.messager.progress('close');
+                        return false;
+                    }
+                },
+                success: function(data) {
+                    $.messager.progress('close');
+                    var data = eval("(" + data + ")");
+                    if(data.msg=="新婚"){
+                        $.messager.alert('提示','请上传结婚证明')
+                    }else if(data.msg=="生育"){
+                        $.messager.alert('提示','请上传结婚证明,生育证明,出生证明')
+                    }else{
+                        $('#win-${rand}').dialog('close');
+                        $.messager.show({
+                            title: '信息提示',
+                            msg: data.msg
+                        });
+                    }
+                    //重新加载
+                    $('#processGrid').datagrid('reload');
+
+
+
+                    //改变上传附件的临时状态
+                    GnifFileUpload.changeTmp('attchFileGrid-${rand}','${oss_server}','${oss_code}',0);
+                }
+            });
+        }
+
+        function addAttache${rand}(){
+            $('#upload-${rand}').dialog('open');
+        }
+
+        //显示流程图
+        function showProcessImage${rand}(){
+            $('#showProcessImageWin-${rand}').dialog({
+                title: '流程图',
+                width: 1000,
+                height: 550,
+                closed: false,
+                cache: false,
+                maximizable:true,
+                href: 'workspace/showProcessDefImage.html?processDefinitionId=' + process_key,
+                modal: true,
+                resizable:true
+            });
+        }
+
+        $('#attchFileGrid-${rand}').datagrid({
+            columns:[[
+                {field:'fileNo',title:'文件编号',width:100},
+                {field:'fileName',title:'文件名',width:120},
+                {field:'fileSize',title:'文件大小',width:120},
+                {field:'param',title:'下载参数',width:0,hidden:'true'},
+                {field:'fileDivId',title:'文件节点id',width:0,hidden:'true'},
+                {field:'operate',title:'操作',width:120,
+                    formatter: function(value,row,index){
+                        var returnStr = "<a href='${file_download_url}"+ row.param +"'>下载</a>"
+                            + "&nbsp;&nbsp;<a href='javascript:void(0)' onclick=delAttch("+row.fileNo+",'"+row.fileDivId+"'>删除</a>"
+                        return returnStr;
+                    }
+                }
+            ]],
+            title:'附件列表',
+            fitColumns:true,
+            rownumbers:true,
+            nowrap: true,
+            border : true
+        });
+
+        function delAttch(fileNo,fileDivId){
+            GnifFileUpload.deleteFile("${oss_code}",fileNo,deleteAttachGrid(fileDivId));
+        }
+
+        function deleteAttachGrid(fileDivId) {
+            //删除表单file
+
+            var item = $('#attchFileGrid-${rand}').datagrid('getRows');
+            if (item) {
+                for (var i = item.length - 1; i >= 0; i--) {
+                    if (item[i]['fileDivId'] == fileDivId) {
+                        var index = $('#attchFileGrid-${rand}').datagrid('getRowIndex', item[i]);
+                        $('#attchFileGrid-${rand}').datagrid('deleteRow', index);
+                    }
+
+                }
+            }
+
+
+            var grid = $("#fileList${rand}").datagrid('getRows');
+            if (grid) {
+                for (var i = grid.length - 1; i >= 0; i--) {
+                    if (grid[i]['fileId'] == fileDivId) {
+                        var idx = $("#fileList${rand}").datagrid('getRowIndex', grid[i]);
+                        $("#fileList${rand}").datagrid('deleteRow', idx);
+                    }
+
+                }
+            }
+        }
+
+        function winOnMax${rand}(){
+            $('#formPanel-${rand}').panel('resize',{
+                width: document.body.clientWidth - 35
+            })
+            $('#attchFilePanel-${rand}').panel('resize',{
+                width: document.body.clientWidth - 35
+            })
+            //附件
+            if ($('#attchFileGrid-${rand}').datagrid) {
+                $('#attchFileGrid-${rand}').datagrid('resize',{
+                    width: document.body.clientWidth - 35
+                });
+            }
+        }
+
+        function winOnRestore${rand}(){
+            $('#formPanel-${rand}').panel('resize',{
+                width: 965
+            })
+            $('#attchFilePanel-${rand}').panel('resize',{
+                width: 965
+            })
+            //附件
+            $('#attchFileGrid-${rand}').datagrid('resize',{
+                width: 965
+            });
+        }
+
+        //关闭上传文件框
+        function closeUploadDiag${rand}(){
+            $('#upload-${rand}').dialog('close');
+        }
+
+
+
+
+
+
+
+            /**
+             * 参数解析
+             * swfUrl, //flash 插件地址，用于支持ie10以下浏览器
+             * hostUrl, //服务地址 ${base}
+             * filePickerDiv, //文件选择按钮 div节点
+             * fileListDiv,    //文件列表div节点
+             * uploadBtn 开始上传按钮节点
+             * isMultiple,    //是否是文件多选    默认为多选 选用
+             * uploadAllFunc    , //文件上传完毕后的回调函数 选用
+             * fileDatagrid 节点
+             * savePath
+             * callback  对象call
+             *
+             */
+        /*var call = {
+            "url":"hr.gionee.com/test.html",
+            "param":"var1=100"
+        };*/
+        var uploader${rand} = GnifFileUpload.init(
+            "js/fileupload/Uploader.swf",
+            "${oss_server}",
+            "filePicker${rand}",
+            "fileList${rand}",
+            "ctlBtn${rand}",
+            "uploader${rand}",
+            true,
+            "${oss_code}",
+            uploadSuccess${rand},
+            "attchFileGrid-${rand}",
+            1
+        );
+
+        function uploadSuccess${rand}(response,file) {
+            var fileAttr = response.attributes;
+            $('#attchFilePanel-${rand}').panel('open');
+
+            var signatureAttr = JSON.parse(GnifFileUpload.sendRequest("./getSignatureAndPolicy.json?info=",encodeURIComponent("0\\n0\\n"+fileAttr.fileNo)));
+
+            $('#attchFileGrid-${rand}').datagrid('appendRow',{
+                fileNo: fileAttr.fileNo,
+                fileName: fileAttr.fileName,
+                fileSize: GnifFileUpload.fileSizeText(fileAttr.fileSize),
+                param: "?code=${oss_code}&policy="+signatureAttr.policy+"&signature="+signatureAttr.signature,
+                fileDivId: file.id
+            });
+        }
+
+
+
+
+
+
+    </script>
+    <#include "/common/foot.ftl">

@@ -1,0 +1,1327 @@
+<!doctype html>
+<html>
+<head>
+	<base href="${base}"></base>
+	<meta charset="utf-8"/>
+	<title>金立工作流平台</title>
+	<link rel="stylesheet" type="text/css" href="css/themes/default/easyui.css"/>
+
+
+	<link rel="stylesheet" type="text/css" href="css/themes/default/my97.css">
+	<link rel="stylesheet" type="text/css" href="css/themes/icon.css"/>
+	<link rel="stylesheet" type="text/css" href="css/themes/myicon.css"/>
+	<link rel="stylesheet" type="text/css" href="css/form/form.css"/>
+	<link rel="stylesheet" type="text/css" href="${base}js/portal/portal.css"/>
+	<link rel="shortcut icon" href="http://shop.gionee.com/favicon.ico" type="image/x-icon">
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+
+	<script type="text/javascript" src="js/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="js/locale/easyui-lang-zh_CN.js"></script>
+	<script type="text/javascript" src="${base}js/common/common.js"></script>
+	<script type="text/javascript" src="${base}js/common/datagrid-detailview.js"></script>
+	<script type="text/javascript" src="${base}js/common/datagrid-groupview.js"></script>
+	<script type="text/javascript" src="${base}js/portal/jquery.portal.js"></script>
+
+	<script type="text/javascript" src="${base}js/my97/My97DatePicker/WdatePicker.js"></script>
+	<script type="text/javascript" src="${base}js/my97/jquery.my97.js"></script>
+
+
+	<!--file upload-->
+	<link rel="stylesheet" type="text/css" href="css/fileupload/webuploader.css"/>
+	<link rel="stylesheet" type="text/css" href="css/fileupload/fileupload.css"/>
+	<script src="js/fileupload/crypto-js.js"></script>
+	<script src="js/fileupload/enc-utf8.js"></script>
+	<script src="js/fileupload/enc-base64.js"></script>
+	<script type="text/javascript" src="js/fileupload/jquery.jsonp.js"></script>
+	<script type="text/javascript" src="js/fileupload/webuploader.js"></script>
+	<script type="text/javascript" src="js/fileupload/fileupload.js?rand=${rand}"></script>
+
+
+
+	<link rel="stylesheet" type="text/css" href="js/tagsinput/jquery.tagsinput.css"/>
+	<script type="text/javascript" src="js/tagsinput/jquery.tagsinput.min.js"></script>
+
+	<script type="text/javascript" src="js/json/json2.js"></script>
+
+	<script type="text/javascript" src="js/ludop/LodopFuncs.js"></script>
+	<script type="text/javascript">
+        if ($.fn.pagination){
+            $.fn.pagination.defaults.beforePageText = '第';
+            $.fn.pagination.defaults.afterPageText = '页，共{pages}页';
+            $.fn.pagination.defaults.displayMsg = '显示{from}到{to}条,共{total}记录';
+        }
+	</script>
+</head>
+<body class="easyui-layout">
+<div data-options="region:'north',border:false" style="height:65px;">
+	<table width="100%" border="0" cellpadding="0" cellspacing="0"
+		   background="image/bg.jpg" height="60">
+		<tr>
+			<td width="683" style="background-image:url(image/bg.jpg)">
+				<img src="image/banner.jpg" width="450" height="60" />
+			</td>
+			<td valign="middle" width="100%" align="right">
+				欢迎，${appuser.name}&nbsp;&nbsp;来到工作流平台&nbsp;&nbsp;
+				<a href="j_spring_cas_security_logout">退出</a>&nbsp;&nbsp;
+			</td>
+		</tr>
+	</table>
+</div>
+<div data-options="region:'west',split:true" title="功能列表" style="width:230px;">
+	<div id="menu-accordion" class="easyui-accordion" data-options="fit:true,border:false">
+
+	</div>
+</div>
+<div data-options="region:'south',split:true" style="height:35px;">
+	<div style="margin:0 auto;line-height:24px;overflow:auto; text-align:center;vertical-align:middle">
+		<span style="font-family: Arial, Helvetica, simsun, sans-serif;">&copy;</span>版权所有：深圳市金立通信设备有限公司&nbsp;&nbsp;&nbsp;&nbsp;软件开发：金立集团信息中心开发部
+	</div>
+</div>
+<div data-options="region:'center',border:false" style="padding:5px;">
+	<div id="tt" class="easyui-tabs" data-options="fit:true,border:false,plain:true">
+		<div title="我的主页" data-options="closable:true,iconCls:'icon-sapstartprocess'">
+			<div id="pp" style="position:relative">
+				<div style="width:98%;">
+					<div id="personalTaskPanel${rand}" title="待办任务" collapsible="true" data-options="tools:'#personalTaskTool${rand}'" closable="true" iconCls="icon-waittask" style="height:320px;padding:0px;">
+						<div id="personalTaskGrid-${rand}"></div>
+					</div>
+					<div id="runProPanel${rand}" title="发起的流程" collapsible="true" data-options="tools:'#proTool${rand}'" closable="true" iconCls="icon-startprocess" style="height:320px;padding:0px;">
+						<div id="runingProcessGrid-${rand}"></div>
+					</div>
+
+					<div id="completedTaskPanel${rand}" title="已办任务" collapsible="true" data-options="tools:'#complatedTaskTool${rand}'" closable="true" iconCls="icon-complatetask" style="height:320px;padding:0px;">
+						<div id="completedTaskGrid-${rand}"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Panel Button -->
+<div id="personalTaskTool${rand}">
+	<a id="personalTaskRef${rand}" href="javascript:void(0)" class="icon-reload"></a>
+</div>
+<div id="proTool${rand}">
+	<a id="proRef${rand}" href="javascript:void(0)" class="icon-reload"></a>
+</div>
+
+<div id="complatedTaskTool${rand}">
+	<a id="complatedTask${rand}" href="javascript:void(0)" class="icon-reload"></a>
+</div>
+
+<div id="tabsMenu" class="easyui-menu" style="width:150px;">
+	<div id="refresh" data-options="iconCls:'icon-reload'">刷新</div>
+	<div class="menu-sep"></div>
+	<div id="close" data-options="iconCls:'icon-cancel'">关闭</div>
+	<div id="closeall" data-options="iconCls:'icon-cancel'">全部关闭</div>
+	<div id="closeother" data-options="iconCls:'icon-cancel'">除此之外全部关闭</div>
+	<div class="menu-sep"></div>
+	<div id="closeright" data-options="iconCls:'icon-cancel'">当前页右侧全部关闭</div>
+	<div id="closeleft" data-options="iconCls:'icon-cancel'">当前页左侧全部关闭</div>
+	<div class="menu-sep"></div>
+	<div id="exit" data-options="iconCls:'icon-redo'">退出</div>
+</div>
+
+<!--打开任务面板-->
+<div id="win-${rand}" class="easyui-dialog" title="Dialog" style="overflow:visible;width:1030px;height:500px;padding:0px 10px 10px 10px"
+	 data-options="
+	   modal:true,
+	   closed:true,
+	   maximizable:true,
+	   cache: false,
+	   onMaximize:winOnMax${rand},
+	   onRestore:winOnRestore${rand},
+	   onClose:winOnClose${rand},
+	   resizable:true">
+	<div id="tab-${rand}">
+		<div title="处理任务" style="overflow:auto;padding:0px;">
+			<div id="formOperatePanel-${rand}" class="easyui-panel" data-options="width:975"
+				 style="padding:5px;z-index:auto;position:fixed;">
+				<a href="javascript:void(0)" id="submitBtn-${rand}" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-save'">完成</a>
+				<a href="javascript:void(0)" id="uploadBtn-${rand}" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-back'">上传附件</a>
+				<a href="javascript:void(0)" id="turntodoTask${rand}" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-turntodo'">转办</a>
+			</div>
+			<div id="loadFormPanel-${rand}" data-options="fit:true,width:975" style="overflow:yes;padding:50px 0px 0px 0px;">
+			</div>
+		</div>
+		<div title="查看历史" style="overflow:auto;padding:5px;">
+		</div>
+	</div>
+</div>
+
+
+<div id="upload-${rand}" class="easyui-dialog" title="上传附件"
+	 data-options="iconCls:'icon-save',resizable:true,width:708,height:544,modal:true,closed:true,
+        	buttons: [{
+                    text:'完成',
+                    iconCls:'icon-ok',
+                    handler: closeUploadDiag${rand}
+                }]
+        ">
+	<div id="uploader${rand}" class="fileUploader">
+		<div id="fileList${rand}" class="uploader-list"></div>
+		<table style="width: 100%;text-align: center;padding-top: 20px;">
+			<tr>
+				<td align="right"><div id="filePicker${rand}">选择文件</div></td>
+				<td align="left"><a id="ctlBtn${rand}" href="javascript:void(0)" class='btn'>开始上传</a></td>
+			</tr>
+		</table>
+	</div>
+
+</div>
+<!--打开任务面板-->
+
+<!-- trun to do win -->
+<div id="truntodoWin-${rand}" class="easyui-dialog" title="转办11" style="width:650px;height:250px;padding:5px"
+	 data-options="
+	   modal:true,
+	   closed:true,
+	   maximizable:false,
+	   cache: false,
+	   resizable:true,
+       buttons: [{
+       		text:'确定',
+            iconCls:'icon-ok',
+           	handler:truntodoWinSubmit${rand}
+     	},{
+           text:'关闭',
+           iconCls:'icon-cancel',
+           handler:truntodoWinClose${rand}
+       }]">
+	<div>
+		<form id="turntodoForm${rand}" method="post" enctype='multipart/form-data'>
+			<table id="turntodoFormTable" class="formtable" cellspacing="1" cellpadding="0">
+				<tr>
+					<td class="formtable_td_key">任务接收人：</td>
+					<td class="formtable_td_value">
+						<input id="accepter${rand}" type="hidden" value="" name="accepter"/>
+						<input id="accepterName${rand}" class="easyui-validatebox" readonly="readonly" name="accepterName" data-options="required:true">
+						<a id="openOrgWinBtn${rand}" href="javascript:void(0);" class="easyui-linkbutton" data-options="iconCls:'icon-search'">选择</a>
+					</td>
+				</tr>
+				<tr>
+					<td class="formtable_td_key">转办原因：</td>
+					<td class="formtable_td_value">
+		  	  			<textarea name="turntodoReason" class="formtable_remark easyui-validatebox"
+								  style="width: 450px; height: 100px" data-options="required:true"></textarea>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+</div>
+
+<!-- select account win -->
+<div id="orgWin-${rand}" class="easyui-dialog" title="用户选择窗口"
+	 style="width: 1000px; height: 500px; padding: 5px"
+	 data-options="modal:true, closed:true,iconCls:'icon-process',
+				buttons: [{
+		                  text:'完成',
+		                  iconCls:'icon-ok',
+		                  handler: selectUserEnd
+		              },{
+		                  text:'关闭',
+		                  iconCls:'icon-cancel',
+		                  handler: closeSelectUserWin
+		              }]">
+	<div class="easyui-layout" data-options="fit:true">
+		<div data-options="region:'north',border:false,minHeight:30," style="padding:5px 0px 5px 0px">
+			<div style="padding:5px;height:30px;background:#fafafa;border:1px solid #ccc">
+				<table border="0" >
+					<tr>
+						<td align="right" style="white-space:nowrap;padding-left:12px;" >用户编号：</td>
+						<td width="160px">
+							<input id="userAccount-${rand}" style="width:200px;" class="easyui-validatebox" type="text" name="account" data-options=""/>
+						</td>
+						<td align="right" style="white-space:nowrap; padding-left:12px;">用户姓名：</td>
+						<td width="160px">
+							<input id="userName-${rand}" style="width:200px;" class="easyui-validatebox" type="text" name="name" data-options=""/>
+						</td>
+						<td width="200"  align="left" style="white-space:nowrap;padding-left:12px;">
+							<a href="javascript:void(0)" id="user_search_btn-${rand}" class="easyui-linkbutton" iconCls="icon-search">查询</a>
+							<a href="javascript:void(0)" id="user_reset_btn-${rand}" class="easyui-linkbutton" iconCls="icon-reload">重置</a>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<div data-options="region:'center',border:false" style="padding:0px 0px 0px 0px;">
+			<div id="userGrid-${rand}"></div>
+		</div>
+	</div>
+</div>
+
+
+<script type="text/javascript">
+    function opentab(title, url,iconCls, refresh, proKey) {
+        if ($('#tt').tabs('exists', title)) {
+            $('#tt').tabs('select', title);
+            if (refresh) {
+                //右侧流程定义
+                $('#processGrid').datagrid('reload',{processDefinitionId: proKey});
+            }
+        } else {
+            $('#tt').tabs('add', {
+                title: title,
+                href: url,
+                closable: true,
+                icon:iconCls
+            });
+        }
+    }
+    function getTabId(){
+        var pp = $('#tt').tabs('getSelected');
+        return pp.attr("id");
+    }
+
+    function getTabTitle(){
+        var pp = $('#tt').tabs('getSelected');
+        return pp.panel('options').title;
+    }
+
+    $(function() {
+        var runProPanel = $('#runProPanel${rand}');
+        var personalTaskPanel = $('#personalTaskPanel${rand}');
+        var completedTaskPanel = $('#completedTaskPanel${rand}');
+
+        var proRefBtn = $('#proRef${rand}');
+        var personalTaskRefBtn = $('#personalTaskRef${rand}');
+        var complatedTaskBtn = $('#complatedTask${rand}');
+
+        $('#menu-accordion').accordion({
+            onSelect:onSelectEvent
+        });
+        //ajax获取菜单
+        $.post('menuAuth/getRootResources.json',function(result){
+            if (result){
+                for(var o in result){
+                    if (result[o].name == '我的任务'|| result[o].name == '我的流程') {
+                        $('#menu-accordion').accordion('add', {
+                            id:"menu_" + result[o].id,
+                            title: result[o].name,
+                            iconCls: result[o].icon,
+                            selected: false,
+                            tools:[{
+                                iconCls:'icon-reload',
+                                handler:function(){
+                                    //Get Select Accordion
+                                    var p = $('#menu-accordion').accordion('getSelected');
+                                    if (typeof(p) != 'undefined' && p != null) {
+                                        var menuId = p.panel('options').id;
+                                        var id = menuId.split("_")[1];
+                                        var treeId = "tree_" + id;
+                                        $('#' + treeId).tree('reload');
+                                    }
+                                }
+                            }]
+                        });
+                    } else {
+                        $('#menu-accordion').accordion('add', {
+                            id:"menu_" + result[o].id,
+                            title: result[o].name,
+                            iconCls: result[o].icon,
+                            selected: false
+                        });
+                    }
+                }
+            }
+        },'json');
+
+        //protal
+        $('#pp').portal({
+            border:false,
+            fit:true
+        });
+
+
+
+        //init Personal Grid
+        $('#personalTaskGrid-${rand}').datagrid({
+            fitColumns:false,
+            url:'workspace/personalTask.json',
+            columns:[[
+                {field:'processInstanceId',title:'流程实例编号',width:120,align:'center'},
+                {field:'processDefName',title:'流程名称',width:130,align:'center'},
+                {field:'processDefinitionId',title:'流程定义',hidden:true,width:150},
+                {field:'proStartUserId',title:'流程发起人工号',hidden:true,width:150},
+                {field:'proStartUserName',title:'流程发起人',width:80,align:'center'},
+                {field:'categoryName',title:'流程所属部门',width:120,align:'center'},
+                {field:'id',title:'任务编号',checkbox:false,hidden:false,width:120,align:'center'},
+                {field:'name',title:'任务名称',width:130,align:'center'},
+                {field:'suspensionState',title:'状态',width:80,align:'center',
+                    formatter: function(value,row,index){
+                        if (value == 1){
+                            return '<span style="color:#EE0000">待办理</span>';
+                        } else if(value == 2){
+                            return '<span style="color:#B03060">已暂停</span>';
+                        }
+                    }
+                },
+                {field:'createTime',title:'创建时间',width:150,align:'center'},
+                {field:'dueDate',title:'计划完成时间',width:150},
+                {field:'assignee',title:'处理人',hidden:true,width:100,align:'center'},
+                {field:'taskDefinitionKey',title:'TaskKey',hidden:true,width:100}
+
+            ]],
+            nowrap: true,
+            fit : true,
+            border : false,
+            pagination:false,
+            pageNumber:1,
+            pageSize:10,
+            rownumbers:true,
+            singleSelect:true,
+            onClickRow:function(index, row){
+                dbHandleProcess${rand}(row);
+            }
+        });
+
+
+        //init Runnning Process
+        $('#runingProcessGrid-${rand}').datagrid({
+            fitColumns:true,
+            url:'workspace/runingProcess.json',
+            columns:[[
+                {field:'processInstanceId',title:'流程实例编号',checkbox:false,width:120,align:'center'},
+                {field:'processDefinitionId',title:'流程定义',hidden:true,width:150},
+                {field:'processDefName',title:'流程名称',width:130,align:'center'},
+                {field:'categoryName',title:'流程所属部门',width:120,align:'center'},
+                {field:'startTime',title:'创建时间',width:150,align:'center'},
+                {field:'endTime',title:'结束时间',hidden:true,width:150,align:'center'},
+                {field:'startUserName',title:'负责人',width:80,align:'center'},
+                {field:'durationInMillis',title:'截止今日处理耗时(小时)',width:120,align:'center',
+                    formatter: function(value,row,index){
+                        var value = row.durationInMillis;
+                        var day = value/1000/3600;
+                        return day.toFixed(2);
+                    }
+                },
+                {field:'processStatus',title:'状态',width:80,align:'center',
+                    formatter: function(value,row,index){
+                        if(value == 1){
+                            return '<span style=\"color:red\">运行中</span>';
+                        } else if (value == 2) {
+                            return '<span style=\"color:blue\">已完成</span>';
+                        } else if (value == 3) {
+                            return '<span style=\"color:#005831\">已挂起</span>';
+                        } else if (value == 4) {
+                            return '<span style=\"color:#c88400\">已激活</span>';
+                        } else if (value == 5) {
+                            return '<span style=\"color:#840228\">已作废</span>';
+                        } else if (value == 6) {
+                            return '<span style=\"color:#D2691E\">审批不通过</span>';
+                        } else {
+                            return '<span style=\"color:#008792\">未知状态</span>';
+                        }
+                    }
+                }
+            ]],
+            nowrap: true,
+            fit : true,
+            border : false,
+            pagination:false,
+            pageNumber:1,
+            pageSize:10,
+            rownumbers:true,
+            singleSelect:true,
+            onClickRow:function(rowIndex, rowData){
+                var title = runProPanel.panel('options').title;
+                var url = $('#runingProcessGrid-${rand}').datagrid('options').url;
+                url = url.replace("json","html");
+                opentab(title, url,'icon-startprocess', false,null);
+            }
+        });
+
+
+
+        //init Completed Task
+        $('#completedTaskGrid-${rand}').datagrid({
+            fitColumns:false,
+            height:400,
+            url:'workspace/completedTask.json',
+            columns:[[
+                {field:'processInstanceId',title:'流程实例编号',width:120,align:'center'},
+                {field:'processDefName',title:'流程名称',width:130,align:'center'},
+                {field:'proStartUserId',title:'流程发起人工号',hidden:true,width:100},
+                {field:'proStartUserName',title:'流程发起人',width:80,align:'center'},
+                {field:'processDefinitionId',title:'流程定义',hidden:true,width:120},
+                {field:'categoryName',title:'流程所属部门',width:120,align:'center'},
+                {field:'id',title:'任务编号',checkbox:false,hidden:false,align:'center'},
+                {field:'name',title:'任务名称',width:130,align:'center'},
+                {field:'startTime',title:'创建时间',width:150,align:'center'},
+                {field:'endTime',title:'完成时间',width:150,align:'center'},
+                {field:'assignee',title:'负责人',hidden:true,width:100},
+                {field:'durationInMillis',title:'处理耗时(小时)',width:100,align:'center',
+                    formatter: function(value,row,index){
+                        var value = row.durationInMillis;
+                        var day = value/1000/3600;
+                        return day.toFixed(2);
+                    }
+                },
+                {field:'deleteReason',title:'状态',width:80,align:'center',
+                    formatter: function(value,row,index){
+                        if (value == 'completed' || value == '跳过'){
+                            return '<span style="color:blue">已完成</span>';
+                        }
+                    }
+                }
+            ]],
+            nowrap: true,
+            fit : true,
+            border : false,
+            pagination:false,
+            pageNumber:1,
+            pageSize:10,
+            singleSelect:true,
+            rownumbers:true,
+            onClickRow:function(rowIndex, rowData){
+                viewHisProcess${rand}(rowData.processInstanceId);
+            }
+        });
+
+        //Btn bind
+        proRefBtn.bind('click', function() {
+            $('#runingProcessGrid-${rand}').datagrid('reload');
+        });
+
+        //Btn bind
+        personalTaskRefBtn .bind('click', function() {
+            $('#personalTaskGrid-${rand}').datagrid('reload');
+        });
+
+        //Btn bind
+        complatedTaskBtn .bind('click', function() {
+            $('#completedTaskGrid-${rand}').datagrid('reload');
+        });
+
+        //update tab close
+        //实例化menu的onClick事件
+        $("#tabsMenu").menu({
+            onClick : function (item) {
+                closeTab(item.id);
+            }
+        });
+
+        //绑定tabs的右键菜单
+        $("#tt").tabs({
+            onContextMenu : function (e, title) {
+                e.preventDefault();
+                $('#tabsMenu').menu('show', {
+                    left : e.pageX,
+                    top : e.pageY
+                }).data("tabTitle", title);
+            }
+        });
+    });
+
+
+    function onSelectEvent(title,index){
+        var p = $('#menu-accordion').accordion('getSelected');
+        var menuId = p.panel('options').id;
+        var id = menuId.split("_")[1];
+        var treeId = "tree_" + id;
+        if (p){
+            //第一个
+            var menuUrl = "menuAuth/getMenuTree.json?pMenuId=" + id;
+            var div = "<ul style='padding:5px' id=\""+ treeId +"\" class=\"easyui-tree\" data-options=\"lines:false,url:'"+ menuUrl +"',onClick:onNodeClick\"></ul>";
+            if (title == '平台流程') {
+                menuUrl = "menus.json";
+                div = "<ul id=\""+ treeId +"\" class=\"easyui-tree\" data-options=\"lines:true,url:'"+ menuUrl +"',onClick:onProNodeClick\"></ul>";
+            }else if(title == '报表查看'){
+                menuUrl = "menusReport.json";
+                div = "<ul id=\""+ treeId +"\" class=\"easyui-tree\" data-options=\"lines:true,url:'"+ menuUrl +"',onClick:queryOnClick\"></ul>";
+            }
+
+            if ($("#" + treeId).length <= 0) {
+                //加载树
+                $('#' + menuId).append(div);
+                $.parser.parse($('#' + menuId));
+            }
+        }
+    }
+    //查询监控流程
+
+    function queryOnClick(node){
+        if (node.attributes == null) {
+            return false;
+        }
+        opentab(node.text, 'report/processReport.html?processDefId='+node.attributes.processDefKey, 'icon-procategory', true, node.attributes.processDefId);
+    }
+
+
+    function onNodeClick(node){
+        if (node.attributes == null) {
+            return false;
+        }
+        opentab(node.text, node.attributes.url,node.iconCls, false,null);
+    }
+
+    function onProNodeClick(node){
+        if (node.attributes == null) {
+            return false;
+        }
+        opentab('流程定义详情', 'myflow/process/' + node.attributes.processDefId + ".html", 'icon-procategory', true, node.attributes.processDefId);
+    }
+
+    //tab close
+    function closeTab(action) {
+        var onlyOpenTitle = "我的主页";
+        var alltabs = $('#tt').tabs('tabs');
+        var currentTab = $('#tt').tabs('getSelected');
+        var allTabtitle = [];
+        $.each(alltabs, function(i, n) {
+            allTabtitle.push($(n).panel('options').title);
+        });
+
+        switch (action) {
+            case "refresh":
+                var srcPath = currentTab.panel('options').href;
+                ;
+                $('#tt').tabs('update', {
+                    tab : currentTab,
+                    options : {
+                        href : srcPath
+                    }
+                })
+                break;
+            case "close":
+                var currtab_title = currentTab.panel('options').title;
+                $('#tt').tabs('close', currtab_title);
+                break;
+            case "closeall":
+                $.each(allTabtitle, function(i, n) {
+                    if (n != onlyOpenTitle) {
+                        $('#tt').tabs('close', n);
+                    }
+                });
+                break;
+            case "closeother":
+                var currtab_title = currentTab.panel('options').title;
+                $.each(allTabtitle, function(i, n) {
+                    if (n != currtab_title && n != onlyOpenTitle) {
+                        $('#tt').tabs('close', n);
+                    }
+                });
+                break;
+            case "closeright":
+                var tabIndex = $('#tt').tabs('getTabIndex', currentTab);
+
+                if (tabIndex == alltabs.length - 1) {
+                    return false;
+                }
+                $.each(allTabtitle, function(i, n) {
+                    if (i > tabIndex) {
+                        if (n != onlyOpenTitle) {
+                            $('#tt').tabs('close', n);
+                        }
+                    }
+                });
+
+                break;
+            case "closeleft":
+                var tabIndex = $('#tt').tabs('getTabIndex', currentTab);
+                if (tabIndex == 1) {
+                    return false;
+                }
+                $.each(allTabtitle, function(i, n) {
+                    if (i < tabIndex) {
+                        if (n != onlyOpenTitle) {
+                            $('#tt').tabs('close', n);
+                        }
+                    }
+                });
+
+                break;
+            case "exit":
+                $('#closeMenu').menu('hide');
+                break;
+        }
+    }
+</script>
+
+
+<script type="text/javascript">
+
+    $('#tab-${rand}').tabs({
+        border:false,
+        fit:true,
+        onSelect:function(title){
+            if (title == '查看历史') {
+                var tab = $('#tab-${rand}').tabs('getSelected');
+                $('#tab-${rand}').tabs('update', {
+                    tab: tab,
+                    options: {
+                        href: 'workspace/personalTaskHistory.html?processInstanceId='+processInstanceId
+                    }
+                });
+            }
+        }
+    });
+
+    var taskId = null;
+    var taskDefKey = null;
+    var processInstanceId = null;
+    var assignee = null;
+    //处理任务
+    function handleProcess${rand}(){
+        var rowArr = $('#personalTaskGrid-${rand}').datagrid('getSelections');
+        var row = null;
+        if (rowArr != null && rowArr.length > 0) {
+            if (rowArr.length == 1){
+                row = rowArr[0];
+                assignee=row.assignee;
+                if(row.assignee == null){
+                    $.messager.alert('信息提示','请先签收任务再处理该任务!','info');
+                    return;
+                } else {
+                    $('#win-${rand}').dialog('setTitle', '办理任务[' + getTabTitle() + ']');
+                    //$('#win-${rand}').dialog('refresh', 'sysprocess/task/form.html?taskId=' + row.id);
+                    taskId = row.id;
+                    taskDefKey = row.taskDefinitionKey;
+                    processInstanceId = row.processInstanceId;
+                    $('#win-${rand}').dialog('open');
+
+                    //初始化表单
+                    $('#loadFormPanel-${rand}').panel({
+                        border:false,
+                        href:'sysprocess/task/form.html?taskId=' + taskId
+                    });
+                    //initStartForm${rand}(getTabTitle(), 'myflow/task/' + row.id + '.json', "myflow/complete/" + row.id + ".json");
+                }
+            } else {
+                $.messager.show({
+                    title: '信息提示',
+                    msg: "请选择一条记录！"
+                });
+            }
+        } else {
+            $.messager.show({
+                title: '信息提示',
+                msg: "请选择记录！"
+            });
+        }
+
+    }
+    //双击处理
+    function dbHandleProcess${rand}(row){
+		/*var currentTab = $('#tt').tabs('getSelected');
+		 var srcPath = currentTab.panel('options').href;
+		 $('#tt').tabs('update', {
+		 tab : currentTab,
+		 options : {
+		 href : srcPath
+		 }
+		 });*/
+        $('#win-${rand}').dialog('setTitle', '办理任务[' + getTabTitle() + ']');
+        taskId = row.id;
+//  alert("taskId---"+taskId);
+        taskDefKey = row.taskDefinitionKey;
+        processInstanceId = row.processInstanceId;
+        $('#win-${rand}').dialog('open');
+        $('#tab-${rand}').tabs({
+            border:false,
+            fit:true,
+            onSelect:function(title){
+                if (title == '查看历史') {
+                    var tab = $('#tab-${rand}').tabs('getSelected');
+                    $('#tab-${rand}').tabs('update', {
+                        tab: tab,
+                        options: {
+                            href: 'workspace/personalTaskHistory.html?processInstanceId='+processInstanceId
+                        }
+                    });
+                }
+            }
+        });
+        //初始化表单
+        $('#loadFormPanel-${rand}').panel({
+            border:false,
+            href:'sysprocess/task/form.html?taskId=' + taskId
+        });
+
+
+
+        //清空文件列表
+        var item = $('#fileList${rand}').datagrid('getRows');
+        if (item) {
+            for (var i = item.length - 1; i >= 0; i--) {
+                var index = $('#fileList${rand}').datagrid('getRowIndex', item[i]);
+                GnifFileUpload.removeFileFromQueue(uploader${rand},item[i]['fileId']);
+                $('#fileList${rand}').datagrid('deleteRow', index);
+            }
+        }
+
+        //清空file数据
+        if($('#attchFileGrid-${rand}').attr("id")){
+            var item = $('#attchFileGrid-${rand}').datagrid('getRows');
+            if (item) {
+                for (var i = item.length - 1; i >= 0; i--) {
+                    var index = $('#attchFileGrid-${rand}').datagrid('getRowIndex', item[i]);
+                    $('#attchFileGrid-${rand}').datagrid('deleteRow', index);
+                }
+            }
+        }
+
+        GnifFileUpload.btnInit("ctlBtn${rand}",uploader${rand});
+
+    }
+    function commitForm${rand}() {
+        $.messager.progress();
+        var div = $('#win-${rand}');
+        var operateForm = div.find("form[id^='"+ taskDefKey +"Form']");
+        operateForm.form('submit', {
+            url: 'sysprocess/complete/'+taskId+".html",
+            onSubmit: function(param) {
+                if(taskDefKey=='updateFixedAssetsProcTask'){
+                    var index=operateForm.find("input[name='fp_rows']").val();
+                    //var scrapWay=operateForm.find("input[name='fp_scrapWay']:checked").val();
+                    if(index==0){
+                        $.messager.alert('信息提示','资产报废清单不可以为空!');
+                        $.messager.progress('close');
+                        return false;
+                    }
+                }
+                if(taskDefKey=='updateNonProdutionMaterialsApply'){
+                    var index=operateForm.find("input[name='fp_rows']").val();
+                    if(index==0){
+                        $.messager.alert('信息提示','非生产物资清单不可以为空!');
+                        $.messager.progress('close');
+                        return false;
+                    }
+                    var noProducs=operateForm.find("input[name='fp_updateMFixedAssetsDetraction']").val();
+                    if(noProducs!=''){
+                        var json=eval("("+noProducs+")");
+                        for(var i=0;i<json.accessoryData.length;i++){
+                            if(json.accessoryData[i].courseAllot=='K'){
+                                if(json.accessoryData[i].costCenter==''||json.accessoryData[i].costCenter==null||json.accessoryData[i].costCenter==undefined){
+                                    $.messager.alert('信息提示','科目分配为K时，成本中心不可为空!');
+                                    $.messager.progress('close');
+                                    return false;
+                                }
+                                if(json.accessoryData[i].itemGroup==''||json.accessoryData[i].itemGroup==null||json.accessoryData[i].itemGroup==undefined){
+                                    $.messager.alert('信息提示','科目分配为K时，物料组不可为空!');
+                                    $.messager.progress('close');
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if(taskDefKey=='updateEquipmentApplyTask'){
+                    var updateEquipment=operateForm.find("input[name='fp_updateMFixedAssetsDetraction']").val();
+                    if(updateEquipment!=''&&updateEquipment!=undefined){
+                        var json=eval("("+updateEquipment+")");
+                        for(var i=0;i<json.accessoryData.length;i++){
+                            if(json.accessoryData[i].courseAllot=='K'){
+                                if(json.accessoryData[i].costCenter==''||json.accessoryData[i].costCenter==null||json.accessoryData[i].costCenter==undefined){
+                                    $.messager.alert('信息提示','科目分配为K时，成本中心不可为空!');
+                                    $.messager.progress('close');
+                                    return false;
+                                }
+                                if(json.accessoryData[i].itemGroup==''||json.accessoryData[i].itemGroup==null||json.accessoryData[i].itemGroup==undefined){
+                                    $.messager.alert('信息提示','科目分配为K时，物料组不可为空!');
+                                    $.messager.progress('close');
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+                if(taskDefKey=='logisticProcurementAudiTask'){
+                    var scrapWay=operateForm.find("input[name='fp_scrapWay']:checked").val();
+                    var equipment='';
+                    if(scrapWay=='1'){
+                        equipment=operateForm.find("input[name='fp_MFixedAssetsDetraction']").val();
+                    }else{
+                        equipment=operateForm.find("input[name='fp_scrapWay2JsonStr']").val();
+                    }
+                    if(equipment!=''){
+                        var json=eval("("+equipment+")");
+                        for(var i=0;i<json.accessoryData.length;i++){
+                            if(json.accessoryData[i].courseAllot=='K'){
+                                if(json.accessoryData[i].costCenter==''||json.accessoryData[i].costCenter==null||json.accessoryData[i].costCenter==undefined){
+                                    $.messager.alert('信息提示','科目分配为K时，成本中心不可为空!');
+                                    $.messager.progress('close');
+                                    return false;
+                                }
+                                if(json.accessoryData[i].itemGroup==''||json.accessoryData[i].itemGroup==null||json.accessoryData[i].itemGroup==undefined){
+                                    $.messager.alert('信息提示','科目分配为K时，物料组不可为空!');
+                                    $.messager.progress('close');
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var validateResult = $(this).form('enableValidation').form('validate');
+                if (validateResult) {
+                    if(taskDefKey=='updateNonProdutionMaterialsApply' || taskDefKey=='updateEquipmentApplyTask' || taskDefKey=='logisticProcurementAudiTask'){
+                        var proofType='';
+                        var noProducs='';
+                        if(taskDefKey=='logisticProcurementAudiTask'){
+                            var scrapWay=operateForm.find("input[name='fp_scrapWay']:checked").val();
+                            proofType=operateForm.find("select[name='fp_proofType']").val()+"#"+operateForm.find("input[name='fp_factory']").val();
+                            if(scrapWay=='1'){
+                                noProducs=operateForm.find("input[name='fp_MFixedAssetsDetraction']").val();
+                            }else{
+                                noProducs=operateForm.find("input[name='fp_scrapWay2JsonStr']").val();
+                            }
+                        }else if(taskDefKey=='updateEquipmentApplyTask'){
+                            proofType=operateForm.find("select[name='fp_updateProofType']").val()+"#"+operateForm.find("input[name='fp_updateFactory']").val();
+                            noProducs=operateForm.find("input[name='fp_updateMFixedAssetsDetraction']").val();
+                        }else{
+                            proofType=operateForm.find("select[name='fp_updateProofType']").val();
+                            noProducs=operateForm.find("input[name='fp_updateMFixedAssetsDetraction']").val();
+                        }
+                        var flag=true;
+                        if(noProducs!=''&&noProducs!=undefined){
+                            $.ajax({
+                                type: "post",
+                                url: "hrFlow/checkNonProdMaterInfoToSap.json",
+                                cache: false,
+                                async: false,  //设置同步
+                                dataType: "json",
+                                data: {proName:taskDefKey,
+                                    proofType:proofType,
+                                    noProducs:noProducs},
+                                success: function (data) {
+                                    if(!data.success){
+                                        $.messager.alert("提示信息",data.msg);
+                                        flag=false;
+                                    }
+                                }
+                            });
+                        }
+                        if(!flag){
+                            $.messager.progress('close');
+                            return false
+                        }
+                    }
+
+                    if ($('#attchFileGrid-${rand}').length > 0) {
+                        var rows = $('#attchFileGrid-${rand}').datagrid('getRows');
+                        $.each(rows, function(i, d){
+                            param['attch_' + i] = d.fileNo + "_" + d.fileName
+                        });
+                    }
+                } else {
+                    $.messager.progress('close');
+                    return false;
+                }
+            },
+            success: function(data) {
+                $.messager.progress('close');
+                var data = JSON.parse(data);
+                if(data.msg=="新婚"){
+                    $.messager.alert('提示','请上传结婚证明')
+                }else if(data.msg=="生育"){
+                    $.messager.alert('提示','请上传结婚证明,生育证明,出生证明')
+                }else{
+                    $('#win-${rand}').dialog('close');
+                    $.messager.show({
+                        height :'100%',
+                        title: '信息提示',
+                        msg: data.msg
+                    });
+                    //重新加载
+                    $('#personalTaskGrid-${rand}').datagrid('reload');
+
+
+                    //改变上传附件的临时状态
+                    GnifFileUpload.changeTmp('attchFileGrid-${rand}','${oss_server}','${oss_code}',0);
+
+                }
+            }
+        });
+    }
+
+    //提交
+    $('#submitBtn-${rand}').bind('click', function(){
+        commitForm${rand}();
+    });
+
+    //上传
+    $('#uploadBtn-${rand}').bind('click', function(){
+        addAttache${rand}();
+    });
+
+    //转办
+    $('#turntodoTask${rand}').bind('click',function(){
+        $('#truntodoWin-${rand}').dialog('open');
+    });
+
+    //弹出窗口
+    $('#openOrgWinBtn${rand}').bind('click', function(){
+        //重新加载用户数据
+        $('#userGrid-${rand}').datagrid({
+            fitColumns:true,
+            url:'hrFlow/queryUserByOrgId.json',
+            queryParams: {
+                taskId: taskId
+            },
+            columns:[[
+                {field:'id',hidden:true, checkbox:false},
+                {field:'account',title:'帐号',width:150},
+                {field:'name',title:'姓名',width:150},
+                {field:'orgId',title:'部门ID',hidden:true, width:150},
+                {field:'orgName',title:'部门名称',width:150}
+            ]],
+            nowrap: true,
+            fit : true,
+            border : true,
+            pagination:true,
+            pageNumber : 1,
+            pageSize : 20,
+            rownumbers:true,
+            singleSelect:true
+        });
+        $('#orgWin-${rand}').dialog('open');
+    });
+
+    //选择用户完成事件
+    function selectUserEnd(){
+        var row = $('#userGrid-${rand}').datagrid('getSelected');
+        if (row) {
+            $('#accepter${rand}').val(row.account);
+            $('#accepterName${rand}').val(row.name);
+
+            $('#accepterName${rand}').validatebox('validate');
+
+            $('#orgWin-${rand}').dialog('close');
+        } else {
+            $.messager.alert('信息提示','请从人员列表中选择一条记录!','warning');
+        }
+    }
+
+    function  closeSelectUserWin(){
+        $('#orgWin-${rand}').dialog('close');
+    }
+
+    //按钮绑定事件
+    $('#user_search_btn-${rand}').bind('click', function(){
+        var account = $('#userAccount-${rand}').val();
+        var name = $('#userName-${rand}').val();
+
+        $('#userGrid-${rand}').datagrid('reload',
+            {
+                account:account,
+                name:name,
+                taskId:taskId
+            });
+    });
+
+    $('#user_reset_btn-${rand}').bind('click', function(){
+        $('#userAccount-${rand}').val('');
+        $('#userName-${rand}').val('');
+    });
+
+    //转办提交
+    function truntodoWinSubmit${rand}(){
+        var row = $('#personalTaskGrid-${rand}').datagrid('getSelected');
+        if (row){
+            if (row.assignee != null){
+                $.messager.progress();
+                $('#turntodoForm${rand}').form('submit', {
+                    url: 'workspace/turntodoTask/'+taskId+".html",
+                    onSubmit: function(param) {
+                        var validateResult = $(this).form('enableValidation').form('validate');
+                        if (!validateResult) {
+                            $.messager.progress('close');
+                            return false;
+                        }
+                    },
+                    success: function(data) {
+                        $.messager.progress('close');
+                        var data = JSON.parse(data);
+                        $('#truntodoWin-${rand}').dialog('close');
+                        $.messager.show({
+                            title: '信息提示',
+                            msg: data.msg
+                        });
+                        $('#win-${rand}').dialog('close');
+                        //重新加载
+                        $('#personalTaskGrid-${rand}').datagrid('reload');
+                    }
+                });
+            } else {
+                $.messager.alert('信息提示','该任务未签收,请签收任务后在进行转办操作!','info');
+            }
+        } else {
+            $.messager.show({
+                title: '信息提示',
+                msg: "请选择记录！"
+            });
+        }
+    }
+    //转办关闭
+    function truntodoWinClose${rand}(){
+        $('#truntodoWin-${rand}').dialog('close');
+    }
+
+    function signTask${rand}(){
+        var rowArr = $('#personalTaskGrid-${rand}').datagrid('getSelections');
+        var row = null;
+        if (rowArr != null && rowArr.length > 0) {
+            if (rowArr.length == 1){
+                row = rowArr[0];
+                if (row.assignee == null){
+                    $.messager.confirm('提示信息','您确定要签收任务吗?',function(r){
+                        if (r){
+                            $.messager.progress();
+                            $.post('workspace/signTask.html',{taskId:row.id},function(result){
+                                $.messager.progress('close');
+                                $.messager.show({
+                                    title: '信息提示', msg: result.msg
+                                });
+                                if (result.success){
+                                    $('#personalTaskGrid-${rand}').datagrid('reload');
+                                }
+                            },'json');
+                        }
+                    });
+                } else {
+                    $.messager.alert('信息提示','该任务已经分配,不需要签收!','info');
+                }
+            } else {
+                $.messager.show({
+                    title: '信息提示',
+                    msg: "请选择一条记录！"
+                });
+            }
+        } else {
+            $.messager.show({
+                title: '信息提示',
+                msg: "请选择记录！"
+            });
+        }
+    }
+
+    //turn to do task
+    function turntodoTask${rand}(){
+        var rowArr = $('#personalTaskGrid-${rand}').datagrid('getSelections');
+        var row = null;
+        if (rowArr != null && rowArr.length > 0) {
+            if (rowArr.length == 1) {
+                row = rowArr[0];
+                if(row.assignee == null){
+                    $.messager.alert('信息提示','请先签收任务再处理该任务!','info');
+                    return;
+                } else {
+                    taskId = row.id;
+                    taskDefKey = row.taskDefinitionKey;
+                    processInstanceId = row.processInstanceId;
+                    $('#truntodoWin-${rand}').dialog('open');
+                }
+            } else {
+                $.messager.show({
+                    title: '信息提示',
+                    msg: "请选择一条记录！"
+                });
+            }
+        } else {
+            $.messager.show({
+                title: '信息提示',
+                msg: "请选择记录！"
+            });
+        }
+    }
+
+    function winOnMax${rand}(){
+        $('#loadFormPanel-${rand}').panel('resize',{
+            width: document.body.clientWidth - 35
+        });
+        $('#formOperatePanel-${rand}').panel('resize',{
+            width: document.body.clientWidth - 35,
+            height: 35
+        });
+        $('#attchFileGrid-${rand}').datagrid('resize',{
+            width: document.body.clientWidth - 35
+        });
+
+        //流程图
+        $('#viewTaskProcessImage').panel('resize',{
+            width: document.body.clientWidth - 65
+        });
+        //任务列表
+        $('#viewTaskHisTaskGrid').datagrid('resize',{
+            width: document.body.clientWidth - 65
+        });
+        //历史表单
+        $('#viewTaskHisFormContent').panel('resize',{
+            width: document.body.clientWidth - 65
+        });
+        //附件
+        $('#viewTaskHisAttachmentGrid').datagrid('resize',{
+            width: document.body.clientWidth - 65
+        });
+    }
+
+    function winOnRestore${rand}(){
+        $('#loadFormPanel-${rand}').panel('resize',{
+            width: 975
+        });
+
+        $('#formOperatePanel-${rand}').panel('resize',{
+            width: 975,
+            height: 35
+        });
+
+        $('#attchFileGrid-${rand}').datagrid('resize',{
+            width: 975
+        });
+
+        //流程图
+        $('#viewTaskProcessImage').panel('resize',{
+            width: 965
+        });
+        //任务列表
+        $('#viewTaskHisTaskGrid').datagrid('resize',{
+            width: 965
+        });
+        //历史表单
+        $('#viewTaskHisFormContent').panel('resize',{
+            width: 965
+        });
+        //附件
+        $('#viewTaskHisAttachmentGrid').datagrid('resize',{
+            width: 965
+        });
+    }
+
+    function winOnClose${rand}(){
+        //Swindow.parent.$('#tab-${rand}').tabs('close','查看历史');
+        //$('#win-${rand}').dialog('destroy');
+        //$('#win-${rand}').dialog('close');
+    }
+
+    function addAttache${rand}(){
+        $('#upload-${rand}').dialog('open');
+    }
+
+
+    function delAttch(fileNo,fileDivId){
+        GnifFileUpload.deleteFile("${oss_code}",fileNo,deleteAttachGrid(fileDivId));
+    }
+
+
+    function deleteAttachGrid(fileDivId){
+        //删除表单file
+
+        var item = $('#attchFileGrid-${rand}').datagrid('getRows');
+        if (item) {
+            for (var i = item.length - 1; i >= 0; i--) {
+                if(item[i]['fileDivId'] == fileDivId) {
+                    var index = $('#attchFileGrid-${rand}').datagrid('getRowIndex',item[i]);
+                    $('#attchFileGrid-${rand}').datagrid('deleteRow', index);
+                }
+
+            }
+        }
+
+
+        var grid = $("#fileList${rand}").datagrid('getRows');
+        if (grid) {
+            for (var i = grid.length - 1; i >= 0; i--) {
+                if(grid[i]['fileId'] == fileDivId) {
+                    var idx = $("#fileList${rand}").datagrid('getRowIndex',grid[i]);
+                    $("#fileList${rand}").datagrid('deleteRow', idx);
+                }
+
+            }
+        }
+    }
+
+
+    //关闭上传文件框
+    function closeUploadDiag${rand}(){
+        $('#upload-${rand}').dialog('close');
+    }
+
+    //查看流程历史
+    function viewHisProcess${rand}(processInstanceId){
+        $('<div id="hisWin-${rand}"></div>').dialog({
+            title: '流程历史',
+            width: 1000,
+            height: 550,
+            closed: false,
+            cache: false,
+            //fit:true,
+            //maximizable:true,
+            style:"padding:10px",
+            href: 'workspace/viewHistory.html?processInstanceId=' + processInstanceId,
+            modal: true,
+            resizable:true,
+            onClose: function(){
+                $(this).dialog('destroy');
+            }
+        });
+    }
+
+
+    var uploader${rand} = GnifFileUpload.init(
+        "js/fileupload/Uploader.swf",
+        "${oss_server}",
+        "filePicker${rand}",
+        "fileList${rand}",
+        "ctlBtn${rand}",
+        "uploader${rand}",
+        true,
+        "${oss_code}",
+        uploadSuccess${rand},
+    	"attchFileGrid-${rand}",
+		1
+    );
+    //上传回调
+    function uploadSuccess${rand}(response,file) {
+
+        if($('#attchFileGrid-${rand}').length <= 0){
+            var $table= $("#" + taskDefKey + "Form");
+            var div = '<br/><div id="attchFileGrid-${rand}"></div>';
+            $table.after(div);
+
+            $('#attchFileGrid-${rand}').datagrid({
+                columns:[[
+                    {field:'fileNo',title:'文件编号',width:100},
+                    {field:'fileName',title:'文件名',width:120},
+                    {field:'fileSize',title:'文件大小',width:120},
+                    {field:'param',title:'下载参数',width:0,hidden:'true'},
+                    {field:'fileDivId',title:'文件节点id',width:0,hidden:'true'},
+                    {field:'operate',title:'操作',width:120,
+                        formatter: function(value,row,index){
+                            var returnStr = "<a href='${file_download_url}"+ row.param +"'>下载</a>"
+                                + "&nbsp;&nbsp;<a href='javascript:void(0)' onclick=delAttch("+row.fileNo+",'"+row.fileDivId+"');>删除</a>"
+                            return returnStr;
+                        }
+                    }
+                ]],
+                title:'附件列表',
+                fitColumns:true,
+                rownumbers:true,
+                nowrap: true,
+                border : true
+            });
+        }
+
+        //Grid add row
+        var fileAttr = response.attributes;
+        var signatureAttr = JSON.parse(GnifFileUpload.sendRequest("./getSignatureAndPolicy.json?info=",encodeURIComponent("0\\n0\\n"+fileAttr.fileNo)));
+        $('#attchFileGrid-${rand}').datagrid('appendRow',{
+            fileNo: fileAttr.fileNo,
+            fileName: fileAttr.fileName,
+            fileSize: GnifFileUpload.fileSizeText(fileAttr.fileSize),
+            param: "?code=${oss_code}&policy="+signatureAttr.policy+"&signature="+signatureAttr.signature,
+            fileDivId: file.id
+        });
+
+
+    }
+
+
+
+</script>
+</body>
+</html>

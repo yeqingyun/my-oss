@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gionee.oss.integration.dao.OssFileDao">
+
+    <sql id="columns">
+        id, system_code, name, md5, size, path, tmp, refer,
+        status, remark, create_by, create_time, update_by, update_time
+    </sql>
+
+    <resultMap type="com.gionee.oss.biz.model.OssFile" id="result">
+        <id property="id" column="id"/>
+        <result property="systemCode" column="system_code"/>
+        <result property="name" column="name"/>
+        <result property="md5" column="md5"/>
+        <result property="size" column="size"/>
+        <result property="path" column="path"/>
+        <result property="tmp" column="tmp"/>
+        <result property="refer" column="refer"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="com.gionee.oss.web.response.MachineVolume" id="result2">
+        <result property="totalSpace" column="totalSpace" javaType="long"/>
+        <result property="usableSpace" column="usableSpace" javaType="long"/>
+        <result property="maxFileSize" column="maxFileSize" javaType="long"/>
+        <result property="avgFileSize" column="avgFileSize" javaType="long"/>
+        <result property="fileCount" column="fileCount" javaType="long"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gionee.oss.biz.model.OssFile">
+        insert into oss_file (<include refid="columns"/>) values (
+        #{nextId},
+        #{systemCode},
+        #{name},
+        #{md5},
+        #{size},
+        #{path},
+        #{tmp},
+        #{refer},
+        #{normalStatus},
+        #{remark,jdbcType=VARCHAR},
+        #{systemCode},
+        #{currentTime},
+        #{systemCode},
+        #{currentTime}
+        )
+    </insert>
+
+
+    <insert id="insertWithId" parameterType="com.gionee.oss.biz.model.OssFile">
+        insert into oss_file (<include refid="columns"/>) values (
+        #{id},
+        #{systemCode},
+        #{name},
+        #{md5},
+        #{size},
+        #{path},
+        #{tmp},
+        #{refer},
+        #{normalStatus},
+        #{remark,jdbcType=VARCHAR},
+        #{systemCode},
+        #{currentTime},
+        #{systemCode},
+        #{currentTime}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.gionee.oss.biz.model.OssFile">
+        update oss_file
+        <set>
+            <if test="systemCode != null">
+                system_code = #{systemCode},
+                update_by = #{systemCode},
+            </if>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="md5 != null">
+                md5 = #{md5},
+            </if>
+            <if test="size != null">
+                size = #{size},
+            </if>
+            <if test="path != null">
+                path = #{path},
+            </if>
+            <if test="tmp != null">
+                tmp = #{tmp},
+            </if>
+            <if test="refer != null">
+                refer = #{refer},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            update_time = #{currentTime}
+        </set>
+        where id = #{id}
+    </update>
+
+
+    <update id="changeTmp" parameterType="map">
+        update oss_file
+        <set>
+            tmp = #{tmp}
+        </set>
+        where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="updateFileCodeByCode">
+        update oss_file
+        <set>
+            system_code = #{newCode}
+        </set>
+        where system_code = #{oldCode}
+    </update>
+
+
+    <update id="changeTmpToUnTmp" parameterType="map">
+        update oss_file
+        <set>
+            refer = 1,
+            tmp = #{tmp}
+        </set>
+        where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+
+    <update id="addRefer" parameterType="map">
+        update oss_file
+        <set>
+            refer = refer + 1
+        </set>
+        where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+
+    <select id="getByIds" parameterType="map" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_file
+        <where>
+            <if test="ids != null">
+                id in
+                <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+
+    </select>
+
+    <select id="getByCode" parameterType="String" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_file
+        <where>
+            <if test="_parameter != null">
+                system_code = #{_parameter}
+            </if>
+        </where>
+
+    </select>
+
+
+    <delete id="delete" parameterType="Integer">
+        delete from oss_file where id = #{_parameter}
+    </delete>
+
+    <delete id="deleteByIds" parameterType="java.util.List">
+        delete from oss_file where id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="deleteTmp" parameterType="Integer">
+        delete from oss_file where tmp = #{_parameter}
+    </delete>
+
+    <select id="getAll" parameterType="map" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_file
+        <where>
+            <if test="systemCode != null">
+                and system_code = #{systemCode}
+            </if>
+            <if test="name != null">
+                <bind name="pattern" value="'%' + _parameter.get('name') + '%'"/>
+                and name like #{pattern}
+            </if>
+            <if test="md5 != null">
+                and md5 = #{md5}
+            </if>
+            <if test="size != null">
+                and size = #{size}
+            </if>
+            <if test="path != null">
+                and path = #{path}
+            </if>
+            <if test="tmp != null">
+                and tmp = #{tmp}
+            </if>
+            <if test="refer != null">
+                and refer = #{refer}
+            </if>
+        </where>
+    </select>
+
+    <select id="getPage" parameterType="map" resultMap="result">
+        select
+        f.id, f.system_code, t.name as remark, f.name, f.md5, f.size, f.path, f.tmp, f.refer,
+        f.status, f.remark, f.create_by, f.create_time, f.update_by, f.update_time
+        from oss_file f join oss_tripartite_system t on f.system_code = t.code
+        <where>
+            <if test="systemCode != null">
+                and f.system_code in
+                <foreach collection="systemCode" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="name != null">
+                <bind name="pattern" value="'%' + _parameter.get('name') + '%'"/>
+                and f.name like #{pattern}
+            </if>
+            <if test="md5 != null">
+                and md5 = #{md5}
+            </if>
+            <if test="size != null">
+                and size = #{size}
+            </if>
+            <if test="path != null">
+                and f.path = #{path}
+            </if>
+            <if test="tmp != null">
+                and tmp = #{tmp}
+            </if>
+            <if test="updateTime != null">
+                and f.update_time = #{updateTime}
+            </if>
+        </where>
+        order by update_time desc,id desc
+        limit #{firstResult},#{pageRow}
+    </select>
+
+    <select id="getPageCount" parameterType="map" resultType="int">
+        select count(id) from oss_file
+        <where>
+            <if test="systemCode != null">
+                and system_code in
+                <foreach collection="systemCode" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="name != null">
+                and name = #{name}
+            </if>
+            <if test="md5 != null">
+                and md5 = #{md5}
+            </if>
+            <if test="size != null">
+                and size = #{size}
+            </if>
+            <if test="path != null">
+                and path = #{path}
+            </if>
+            <if test="tmp != null">
+                and tmp = #{tmp}
+            </if>
+            <if test="updateTime != null">
+                and update_time = #{updateTime}
+            </if>
+        </where>
+    </select>
+
+    <select id="get" parameterType="Integer" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_file
+        where id = #{_parameter}
+    </select>
+
+    <select id="getAllFileInfo" resultMap="result2">
+        select max(size) as maxFileSize,avg(size) as avgFileSize,count(id) as fileCount from oss_file;
+    </select>
+
+    <select id="getByMd5AndSize" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_file
+        where md5 = #{md5}
+        and size = #{size}
+    </select>
+
+</mapper>

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gionee.oss.integration.dao.OssTripartiteSystemDao">
+
+    <sql id="columns">
+        code, key_, system_rootPath,name,url,
+        status, remark, create_by, create_time, update_by, update_time
+    </sql>
+
+    <resultMap type="com.gionee.oss.biz.model.OssTripartiteSystem" id="result">
+        <result property="code" column="code"/>
+        <result property="name" column="name"/>
+        <result property="url" column="url"/>
+        <result property="key" column="key_"/>
+        <result property="systemRootpath" column="system_rootPath"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <update id="update" parameterType="com.gionee.oss.biz.model.OssTripartiteSystem">
+        update oss_tripartite_system
+        <set>
+            <if test="code != null">
+                code = #{code},
+                update_by = #{code},
+            </if>
+            <if test="key != null">
+                key_ = #{key},
+            </if>
+            <if test="systemRootpath != null">
+                system_rootPath = #{systemRootpath},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="url != null">
+                url = #{url},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            update_time = #{currentTime}
+        </set>
+        where code = #{oldCode}
+    </update>
+
+    <insert id="insert" parameterType="com.gionee.oss.biz.model.OssTripartiteSystem">
+        insert into oss_tripartite_system (<include refid="columns"/>) values (
+        #{code},
+        #{key},
+        #{systemRootpath},
+        #{name},
+        #{url},
+        #{normalStatus},
+        #{remark,jdbcType=VARCHAR},
+        #{code},
+        #{currentTime},
+        #{code},
+        #{currentTime}
+        )
+    </insert>
+
+    <select id="getAll" parameterType="map" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_tripartite_system
+        <where>
+            <if test="code != null">
+                and code = #{code}
+            </if>
+            <if test="key != null">
+                and key_ = #{key}
+            </if>
+            <if test="name != null">
+                and name = #{name}
+            </if>
+            <if test="url != null">
+                and url = #{url}
+            </if>
+            <if test="systemRootpath != null">
+                and system_rootPath = #{systemRootpath}
+            </if>
+            and status = 0
+        </where>
+    </select>
+
+    <delete id="delete" parameterType="map">
+        delete from oss_tripartite_system where code in
+        <foreach collection="codes" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <select id="getPage" parameterType="map" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_tripartite_system
+        <where>
+            <if test="code != null">
+                and code = #{code}
+            </if>
+            <if test="key != null">
+                and key_ = #{key}
+            </if>
+            <if test="systemRootpath != null">
+                and system_rootPath = #{systemRootpath}
+            </if>
+            <if test="name != null">
+                <bind name="pattern" value="'%' + _parameter.get('name') + '%'"/>
+                and name like #{pattern}
+            </if>
+            <if test="url != null">
+                and url = #{url}
+            </if>
+        </where>
+        order by update_time desc
+        limit #{firstResult},#{pageRow}
+    </select>
+
+    <select id="getPageCount" parameterType="map" resultType="int">
+        select count(code) from oss_tripartite_system
+        <where>
+            <if test="code != null">
+                and code = #{code}
+            </if>
+            <if test="key != null">
+                and key_ = #{key}
+            </if>
+            <if test="systemRootpath != null">
+                and system_rootPath = #{systemRootpath}
+            </if>
+            <if test="name != null">
+                and name = #{name}
+            </if>
+            <if test="url != null">
+                and url = #{url}
+            </if>
+        </where>
+    </select>
+
+    <select id="getByCode" parameterType="String" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_tripartite_system
+        where code = #{_parameter}
+    </select>
+
+</mapper>

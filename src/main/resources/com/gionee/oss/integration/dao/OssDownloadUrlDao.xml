@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gionee.oss.integration.dao.OssDownloadUrlDao">
+
+    <sql id="columns">
+        id, policy, code, count, expire,countless,
+        status, remark, create_by, create_time, update_by, update_time
+    </sql>
+
+    <resultMap type="com.gionee.oss.biz.model.OssDownloadUrl" id="result">
+        <id property="id" column="id"/>
+        <result property="policy" column="policy"/>
+        <result property="code" column="code"/>
+        <result property="count" column="count"/>
+        <result property="countLess" column="countless"/>
+        <result property="expire" column="expire"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gionee.oss.biz.model.OssDownloadUrl">
+        insert into oss_download_url (<include refid="columns"/>) values (
+        #{nextId},
+        #{policy},
+        #{code},
+        #{count},
+        #{expire},
+        #{countLess},
+        #{normalStatus},
+        #{remark,jdbcType=VARCHAR},
+        #{code},
+        #{currentTime},
+        #{code},
+        #{currentTime}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.gionee.oss.biz.model.OssDownloadUrl">
+        update oss_download_url
+        <set>
+            <if test="policy != null">
+                policy = #{policy},
+            </if>
+            <if test="code != null">
+                code = #{code},
+                update_by = #{code},
+            </if>
+            <if test="count != null">
+                count = #{count},
+            </if>
+            <if test="countLess != null">
+                countless = #{countLess},
+            </if>
+            <if test="expire != null">
+                expire = #{expire},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            update_time = #{currentTime}
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="Integer">
+        delete from oss_download_url where id = #{_parameter}
+    </delete>
+
+    <select id="getAllById" parameterType="Integer" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_download_url
+        where id = #{_parameter}
+    </select>
+
+    <select id="getById" parameterType="Integer" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_download_url
+        where id = #{_parameter}
+    </select>
+
+    <select id="getPageById" parameterType="Integer" resultMap="result">
+        select * from ( select a.*, ROWNUM rnum from (
+        select
+        <include refid="columns"/>
+        from oss_download_url
+        where id = #{_parameter}
+        ) a where ROWNUM &lt; #{lastRow}) where rnum &gt;= #{firstRow}
+    </select>
+    <select id="getPageCountById" parameterType="Integer" resultType="int">
+        select count(id) from oss_download_url
+        where id = #{_parameter}
+    </select>
+
+    <select id="getPage" parameterType="map" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_download_url
+        <where>
+            <if test="policy != null">
+                and policy = #{policy}
+            </if>
+            <if test="code != null">
+                and code = #{code}
+            </if>
+            <if test="count != null">
+                and count = #{count}
+            </if>
+            <if test="expire != null">
+                and expire = #{expire}
+            </if>
+        </where>
+    </select>
+    <select id="getPageCount" parameterType="map" resultType="int">
+        select count(policy) from oss_download_url
+        <where>
+            <if test="policy != null">
+                and policy = #{policy}
+            </if>
+            <if test="code != null">
+                and code = #{code}
+            </if>
+            <if test="count != null">
+                and count = #{count}
+            </if>
+            <if test="expire != null">
+                and expire = #{expire}
+            </if>
+        </where>
+    </select>
+
+    <select id="get" parameterType="Integer" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_download_url
+        where id = #{_parameter}
+    </select>
+
+    <select id="getByCodeAndPolicy" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_download_url
+        where code = #{code}
+        and policy = #{policy}
+    </select>
+
+    <select id="getAll" parameterType="map" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_download_url
+        <where>
+            <if test="policy != null">
+                and policy = #{policy}
+            </if>
+            <if test="code != null">
+                and code = #{code}
+            </if>
+            <if test="count != null">
+                and count = #{count}
+            </if>
+            <if test="expire != null">
+                and expire = #{expire}
+            </if>
+            <if test="countLess != null">
+                and countless = #{countLess}
+            </if>
+        </where>
+    </select>
+
+</mapper>

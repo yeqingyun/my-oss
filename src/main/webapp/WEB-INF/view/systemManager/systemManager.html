@@ -1,0 +1,301 @@
+<!doctype html>
+<#include "/common/lib.ftl">
+    <html>
+    <head>
+        <base href="${base}"></base>
+        <meta charset="utf-8"/>
+        <title>标签管理</title>
+        <link rel="stylesheet" type="text/css" href="dev/css/themes/default/easyui.css"/>
+        <link rel="stylesheet" type="text/css" href="dev/css/main.css"/>
+        <script type="text/javascript" src="dev/js/jquery.min.js"></script>
+        <script type="text/javascript" src="dev/js/jquery.easyui.min.js"></script>
+        <script type="text/javascript" src="dev/js/locale/easyui-lang-zh_CN.js"></script>
+    </head>
+    <body>
+    <div class="easyui-layout" data-options="fit:true" style="">
+        <div data-options="region:'north',border:false" style="height:40px;padding:10px;">
+            <div class="sitem">
+                <label>系统名称：</label><input name="name" id="name${rand}" type="text" class="easyui-validatebox"/>
+                <label>系统编码：</label><input name="code" id="code${rand}" type="text" class="easyui-validatebox"/>
+            </div>
+            <a id="search${rand}" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+        </div>
+        <div data-options="region:'center',border:false" style="padding:10px;">
+            <table id="tb${rand}"></table>
+        </div>
+    </div>
+
+    <div id="editSystem${rand}" title="编辑系统">
+        <form id="editSystemForm${rand}" method="post">
+            <input id="systemOldCode${rand}" type="hidden" name="oldCode" data-options="required:true"/>
+            <table cellpadding="5">
+                <tr>
+                    <td>系统名称:</td>
+                    <td><input id="systemName${rand}" class="easyui-textbox" type="text" name="name"
+                               data-options="required:true"/></td>
+                </tr>
+                <tr>
+                    <td>系统编码:</td>
+                    <td><input id="systemCode${rand}" class="easyui-textbox" type="text" name="code"
+                               data-options="required:true"/></td>
+                </tr>
+                <tr>
+                    <td>系统地址:</td>
+                    <td><input id="systemUrl${rand}" class="easyui-textbox" type="text" name="url"
+                               data-options="required:true"/></td>
+                </tr>
+                <tr>
+                    <td>系统文件存放路径:</td>
+                    <td><input id="systemPath${rand}" class="easyui-textbox" type="text" name="systemRootpath"
+                               data-options="required:true"/></td>
+                </tr>
+                <tr>
+                    <td>系统秘钥:</td>
+                    <td><input id="systemKey${rand}" class="easyui-textbox" type="text" name="key"
+                               data-options="required:true"/>&nbsp;&nbsp;&nbsp;<a id="generate-key${rand}"
+                                                                                  href="javascript:void(0)">生成秘钥</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <div style="text-align:center;padding:15px">
+            <a href="javascript:void(0)" id="editSystemSubmit${rand}" class="easyui-linkbutton">保存</a>
+            <a href="javascript:void(0)" id="editSystemReset${rand}" class="easyui-linkbutton">重置</a>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        $(function () {
+            var tb = $('#tb${rand}');
+            var btn = $('#search${rand}');
+
+            btn.bind('click', function () {
+                tb.datagrid('load', {
+                    name: $('#name${rand}').val(),
+                    code: $('#code${rand}').val()
+                });
+            });
+
+
+            $("#generate-key${rand}").bind('click', function () {
+                $("#systemKey${rand}").val(randomKey());
+            });
+
+            $("#editSystemReset${rand}").bind("click", function () {
+                $("#editSystemForm${rand}").find("table input").val('');
+            });
+
+
+            function randomKey() {
+                var seed = new Array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+                    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'p', 'Q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+                    '2', '3', '4', '5', '6', '7', '8', '9', '*', '%', '$', '#', '@', '!', '~', '-', '/', '<', '>', '(', ')');
+                var seedLength = seed.length;
+                var createPassword = '';
+                for (var i = 0; i < 16; i++) {
+                    var j = Math.floor(Math.random() * seedLength);
+                    createPassword += seed[j];
+                }
+                return createPassword;
+            }
+
+
+            function editSystemBoxValidate() {
+                if ($('#systemName${rand}').val() == '') {
+                    $.messager.alert('提示', '系统名称不能为空');
+                    return false;
+                }
+                if ($('#systemCode${rand}').val() == '') {
+                    $.messager.alert('提示', '系统编码不能为空');
+                    return false;
+                }
+                var keyValue = $('#systemKey${rand}').val();
+                if (keyValue == '' || keyValue.length < 16 || keyValue.length > 32) {
+                    $.messager.alert('提示', '系统秘钥不能为空且必须在16到32位之间');
+                    return false;
+                }
+                return true;
+            }
+
+
+            function create() {
+                $("#editSystemForm${rand} input").val('');
+
+                $("#editSystemSubmit${rand}").unbind().bind("click", function () {
+                    if (editSystemBoxValidate()) {
+                        $.post('tripartiteSystem/add.json', $("#editSystemForm${rand}").serialize(), function (data) {
+                            if (data.success) {
+                                $('#editSystem${rand}').window('close');
+                                $.messager.show({title: '提示', msg: data.message});
+                                tb.datagrid('load', {});
+                                $("#editSystemForm${rand}").find("table input").val('');
+                            } else {
+                                $.messager.alert('提示', data.message);
+                            }
+                        });
+                    }
+                });
+
+
+                $('#editSystem${rand}').window({
+                    width: 400,
+                    height: 280,
+                    modal: true
+                });
+            }
+
+            function edit() {
+                var gridData = tb.datagrid('getSelections');
+                if (gridData.length == 0) {
+                    $.messager.alert('提示', '没有选中任何数据');
+                    return;
+                }
+                if (gridData.length > 1) {
+                    $.messager.alert('提示', '编辑不能多选');
+                    return;
+                }
+
+                setEditFormValue(gridData[0]);
+
+                $("#editSystemSubmit${rand}").unbind().bind("click", function () {
+                    if (editSystemBoxValidate()) {
+                        $.post('tripartiteSystem/update.json', $("#editSystemForm${rand}").serialize(), function (data) {
+                            if (data.success) {
+                                $('#editSystem${rand}').window('close');
+                                $.messager.show({title: '提示', msg: data.message});
+                                tb.datagrid('load', {});
+                                $("#editSystemForm${rand}").find("table input").val('');
+                            } else {
+                                $.messager.alert('提示', data.message);
+                            }
+                        });
+                    }
+                });
+
+
+                $('#editSystem${rand}').window({
+                    width: 400,
+                    height: 280,
+                    modal: true
+                });
+            }
+
+
+            function setEditFormValue(data) {
+                $('#systemOldCode${rand}').val(data.code);
+                $('#systemCode${rand}').val(data.code);
+                $('#systemName${rand}').val(data.name);
+                $('#systemUrl${rand}').val(data.url);
+                $('#systemPath${rand}').val(data.systemRootpath);
+                $('#systemKey${rand}').val(data.key);
+            }
+
+            function save() {
+                tb.datagrid('saveRow');
+            }
+
+            function remove() {
+                var gridData = tb.datagrid('getSelections');
+                if (gridData.length == 0) {
+                    $.messager.alert('提示', '没有选中任何数据');
+                    return;
+                }
+                var codeValue = "";
+                for (var i = 0; i < gridData.length; i++) {
+                    codeValue += gridData[i].code + ",";
+                }
+
+                var param = {code: codeValue.substring(0, codeValue.length - 1)};
+                $.post('tripartiteSystem/remove.json', param, function (data) {
+                    if (data.success) {
+                        $.messager.show({title: '提示', msg: data.message});
+                        tb.datagrid('load', {});
+                    } else {
+                        $.messager.alert('提示', data.message);
+                    }
+                });
+            }
+
+
+            tb.datagrid({
+                    fit: true,
+                    idField: 'code',
+                    pagination: true,
+                    fitColumns: false,
+                    columns: [[
+                        {field: 'code', title: '系统编码', width: 90, checkbox: true},
+                        {
+                            field: 'showCode', title: '系统编码', width: 90,
+                            formatter: function (value, row, index) {
+                                return row.code;
+                            }
+                        },
+                        {
+                            field: 'name',
+                            title: '系统名称',
+                            width: 110,
+                            editor: {type: 'validatebox', options: {required: true}}
+                        },
+                        {
+                            field: 'url',
+                            title: '系统地址',
+                            width: 190,
+                            editor: {type: 'validatebox', options: {required: false}},
+                            formatter: function (value, row, index) {
+                                var returnStr = "<a target='_blank' href='" + value + "'>" + value + "</a>";
+                                return returnStr;
+                            }
+                        },
+                        {
+                            field: 'systemRootpath',
+                            title: '系统文件存放位置',
+                            width: 200,
+                            editor: {type: 'validatebox', options: {required: true}}
+                        },
+                        {field: 'key', hidden: true, width: 0},
+                        {
+                            field: 'showkey', title: '系统秘钥', width: 190,
+                            formatter: function (value, row, index) {
+                                if (!value)
+                                    return "****************";
+                                else
+                                    return value;
+                            }
+                        },
+                        {
+                            field: 'btn',
+                            title: '查看秘钥',
+                            width: 80,
+                            editor: {type: 'validatebox', options: {required: false}},
+                            formatter: function (value, row, index) {
+                                return "<a href='javascript:void(0)' class='show-key${rand}' data-id='" + index + "'>查看秘钥</a>";
+                            }
+                        }
+                    ]],
+                    url: 'tripartiteSystem/list.json',
+                    saveUrl: 'tripartiteSystem/add.json',
+                    updateUrl: 'tripartiteSystem/update.json',
+                    destroyUrl: 'tripartiteSystem/remove.json',
+                    onError: function (index, data) {
+                        alert(data.message)
+                    },
+                    onLoadSuccess: function (data) {
+
+
+                        //查看秘钥
+                        $(".show-key${rand}").click(function () {
+                            var idx = parseInt($(this).attr("data-id"));
+                            var row = tb.datagrid('getRows')[idx];
+                            row.showkey = row.key;
+                            tb.datagrid('updateRow', {index: idx, row: row});
+                        });
+
+
+                    },
+                <@toolbar 'system_manager' />
+            });
+        });
+    </script>
+    </body>
+    </html>

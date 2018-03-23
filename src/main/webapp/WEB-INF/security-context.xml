@@ -1,0 +1,98 @@
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:context="http://www.springframework.org/schema/context"
+             xmlns="http://www.springframework.org/schema/security"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+								 http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+								 http://www.springframework.org/schema/context
+								 http://www.springframework.org/schema/context/spring-context.xsd
+								 http://www.springframework.org/schema/security
+								 http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+    <!-- 属性配置文件 -->
+    <context:property-placeholder location="classpath:app.properties"/>
+
+    <!-- 不需要拦截的URL -->
+    <http security="none" pattern="/upload.html"></http>
+    <http security="none" pattern="/common_upload.html"></http>
+    <http security="none" pattern="/download.html"></http>
+    <http security="none" pattern="/file_delete.html"></http>
+    <http security="none" pattern="/change_tmp.html"></http>
+
+    <!-- 需要进行拦截的URL -->
+    <http pattern="/**" entry-point-ref="casEntryPoint">
+        <custom-filter ref="requestSingleLogoutFilter" before="LOGOUT_FILTER"/>
+        <custom-filter ref="singleLogoutFilter" before="CAS_FILTER"/>
+        <custom-filter ref="casFilter" position="CAS_FILTER"/>
+        <custom-filter ref="gnifFilterSecurityInterceptor" before="FILTER_SECURITY_INTERCEPTOR"/>
+        <logout logout-success-url="/cas-logout.jsp"/>
+    </http>
+
+    <!-- 退出登录发送器，用于向 CAS 发送用户的单点退出请求 -->
+    <beans:bean id="requestSingleLogoutFilter"
+                class="org.springframework.security.web.authentication.logout.LogoutFilter">
+        <beans:constructor-arg value="${cas.logout.url}"/>
+        <beans:constructor-arg>
+            <beans:bean class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler"/>
+        </beans:constructor-arg>
+        <!-- 页面的退出按钮使用以下URL -->
+        <beans:property name="filterProcessesUrl" value="/j_spring_cas_security_logout"/>
+    </beans:bean>
+
+    <!-- 单点退出过滤器，用于清空 session -->
+    <beans:bean id="singleLogoutFilter" class="com.gionee.gnif.web.GnifSingleSignOutFilter"/>
+
+    <!-- 授权拦截器，根据用户的权限，对请求的 URL 进行拦截 -->
+    <beans:bean id="gnifFilterSecurityInterceptor" class="com.gionee.auth.security.FilterSecurityInterceptorImpl">
+        <beans:property name="securityMetadataSource">
+            <beans:bean class="com.gionee.auth.security.InvocationSecurityMetadataSourceImpl"/>
+        </beans:property>
+        <beans:property name="authenticationManager" ref="authenticationManager"/>
+        <beans:property name="accessDecisionManager">
+            <beans:bean class="com.gionee.auth.security.AccessDecisionManagerImpl"/>
+        </beans:property>
+    </beans:bean>
+
+    <!-- 用户信息服务，在用户登录时，从数据库取出登录用户的权限放入 session -->
+    <beans:bean id="userDetailService" class="com.gionee.auth.security.cas.CasUserDetailsServiceImpl"/>
+
+    <!-- CAS 过滤器，用户认证通过该主类来完成 -->
+    <beans:bean id="casFilter" class="org.springframework.security.cas.web.CasAuthenticationFilter">
+        <beans:property name="authenticationManager" ref="authenticationManager"/>
+    </beans:bean>
+
+    <!-- 认证管理类，管理认证方式，当前使用的认证方式为通过 CAS 进行认证 -->
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider ref="casAuthenticationProvider"/>
+    </authentication-manager>
+
+    <!-- CAS 认证配置，通过该类访问 CAS 确认用户是否已经登录 -->
+    <beans:bean id="casAuthenticationProvider"
+                class="org.springframework.security.cas.authentication.CasAuthenticationProvider">
+        <beans:property name="authenticationUserDetailsService">
+            <beans:bean class="org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper">
+                <beans:constructor-arg ref="userDetailService"/>
+            </beans:bean>
+        </beans:property>
+        <beans:property name="serviceProperties" ref="serviceProperties"/>
+        <beans:property name="ticketValidator">
+            <beans:bean class="org.jasig.cas.client.validation.Cas20ServiceTicketValidator">
+                <beans:constructor-arg index="0" value="${cas.auth.url}"/>
+            </beans:bean>
+        </beans:property>
+        <beans:property name="key" value="an_id_for_this_auth_provider_only"/>
+    </beans:bean>
+
+    <!-- 与 CAS 交互时需要传递的属性 -->
+    <beans:bean id="serviceProperties" class="org.springframework.security.cas.ServiceProperties">
+        <beans:property name="service" value="${base.path}j_spring_cas_security_check"/>
+        <beans:property name="sendRenew" value="false"/>
+    </beans:bean>
+
+    <!-- 用户认证重定向配置，如果用户在当前系统需要登录，会根据以下配置重定向到 CAS 进行登录认证 -->
+    <beans:bean id="casEntryPoint" class="org.springframework.security.cas.web.CasAuthenticationEntryPoint">
+        <beans:property name="loginUrl" value="${cas.login.url}"/>
+        <beans:property name="serviceProperties" ref="serviceProperties"/>
+    </beans:bean>
+
+</beans:beans>

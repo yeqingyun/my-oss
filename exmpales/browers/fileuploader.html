@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>文件上传</title>
+    <link rel="stylesheet" type="text/css" href="css/webuploader.css"/>
+    <link rel="stylesheet" type="text/css" href="css/fileupload.css"/>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/jquery.jsonp.js"></script>
+    <script src="js/crypto-js.js"></script>
+    <script src="js/hmac-sha1.js"></script>
+    <script src="js/enc-utf8.js"></script>
+    <script src="js/enc-base64.js"></script>
+    <script type="text/javascript" src="js/webuploader.js"></script>
+    <script type="text/javascript" src="js/fileupload.js"></script>
+</head>
+<body>
+<div id="uploader" class="wu-example">
+    <!--<div>
+        <a href="http://www.adobe.com/go/getflashplayer" target="_blank" border="0">更新flash</a>
+    </div>-->
+    <h4>您所选择的文件列表：</h4>
+    <!--用来存放文件信息-->
+    <div id="fileList" class="uploader-list"></div>
+    <table>
+        <tr>
+            <td><div id="filePicker">选择文件</div></td>
+            <td><a id="ctlBtn" href="javascript:void(0);" class='btn'>开始上传</a></td>
+        </tr>
+    </table>
+</div>
+</body>
+<script type="text/javascript">
+
+    function uploadSuccess(response) {
+        $('#ctlBtn').attr("onclick", "start()");
+        $('#ctlBtn').text("继续上传");
+    }
+    /**
+     * 参数解析
+     * swfUrl, //flash 插件地址，用于支持ie10以下浏览器
+     * hostUrl, //服务地址 ${base}
+     * filePickerDiv, //文件选择按钮 div节点
+     * fileListDiv,    //文件列表div节点
+     * isMultiple,    //是否是文件多选    默认为多选 选用
+     * uploadAllFunc    , //文件上传完毕后的回调函数 选用
+     */
+    GnifFileUpload.init(
+        "./js/Uploader.swf",
+        "http://localhost:8000/gnif-oss/",
+        "filePicker",
+        "fileList",
+        true,
+        uploadSuccess
+    );
+
+
+    function stop() {
+        GnifFileUpload.stop();
+        $('#ctlBtn').attr("onclick", "start()");
+        $('#ctlBtn').text("继续上传");
+    }
+
+    function start() {
+        GnifFileUpload.start();
+        $('#ctlBtn').attr("onclick", "stop()");
+        $('#ctlBtn').text("取消上传");
+    }
+
+
+    $(function () {
+        $('#ctlBtn').attr("onclick", "start()");
+        $('#ctlBtn').text("开始上传");
+    });
+
+
+</script>
+</html>

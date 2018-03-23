@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gionee.oss.integration.dao.OssDeleteFileLogDao">
+
+    <sql id="columns">
+    id, file_id, file_name, file_size, file_path, file_md5, delete_time,system_code,file_refer,file_tmp,
+	status, remark, create_by, create_time, update_by, update_time
+    </sql>
+
+    <resultMap type="com.gionee.oss.biz.model.OssDeleteFileLog" id="result">
+        <id property="id" column="id"/>
+        <result property="fileId" column="file_id"/>
+        <result property="fileName" column="file_name"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="filePath" column="file_path"/>
+        <result property="fileMd5" column="file_md5"/>
+        <result property="fileTmp" column="file_tmp"/>
+        <result property="deleteTime" column="delete_time"/>
+        <result property="systemCode" column="system_code"/>
+        <result property="fileRefer" column="file_refer"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gionee.oss.biz.model.OssDeleteFileLog">
+        insert into oss_delete_file_log (<include refid="columns"/>) values (
+        #{nextId},
+        #{fileId},
+        #{fileName},
+        #{fileSize},
+        #{filePath},
+        #{fileMd5},
+        #{deleteTime},
+        #{systemCode},
+        #{fileRefer},
+        #{fileTmp},
+        #{normalStatus},
+        #{remark,jdbcType=VARCHAR},
+        #{currentAccount},
+        #{currentTime},
+        #{currentAccount},
+        #{currentTime}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.gionee.oss.biz.model.OssDeleteFileLog">
+        update oss_delete_file_log
+        <set>
+            <if test="fileName != null">
+                file_name = #{fileName},
+            </if>
+            <if test="fileSize != null">
+                file_size = #{fileSize},
+            </if>
+            <if test="systemCode != null">
+                system_code = #{systemCode},
+            </if>
+            <if test="filePath != null">
+                file_path = #{filePath},
+            </if>
+            <if test="fileMd5 != null">
+                file_md5 = #{fileMd5},
+            </if>
+            <if test="fileTmp != null">
+                file_tmp = #{fileTmp},
+            </if>
+            <if test="deleteTime != null">
+                delete_time = #{deleteTime},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            update_by = #{currentAccount},
+            update_time = #{currentTime}
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="Integer">
+	delete from oss_delete_file_log where id = #{_parameter}
+  </delete>
+
+    <select id="get" parameterType="Integer" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_delete_file_log
+        where id = #{_parameter}
+    </select>
+
+    <select id="getPage" parameterType="map" resultMap="result">
+        select
+        d.id, file_id, file_name, file_size, file_path, file_md5,file_tmp, delete_time, system_code,t.name as
+        remark,file_refer,
+        d.status, d.remark, d.create_by, d.create_time,d.update_by, d.update_time
+        from oss_delete_file_log d join oss_tripartite_system t on d.system_code = t.code
+        <where>
+            <if test="fileName != null">
+                and file_name = #{fileName}
+            </if>
+            <if test="fileSize != null">
+                and file_size = #{fileSize}
+            </if>
+            <if test="filePath != null">
+                and file_path = #{filePath}
+            </if>
+            <if test="fileMd5 != null">
+                and file_md5 = #{fileMd5}
+            </if>
+            <if test="deleteTime != null">
+                and delete_time = #{deleteTime}
+            </if>
+            <if test="systemCode != null">
+                and system_code = #{systemCode}
+            </if>
+        </where>
+        order by delete_time desc,id desc
+        limit #{firstResult},#{pageRow}
+    </select>
+
+    <select id="getPageCount" parameterType="map" resultType="int">
+        select count(id) from oss_delete_file_log
+        <where>
+            <if test="fileName != null">
+                and file_name = #{fileName}
+            </if>
+            <if test="fileSize != null">
+                and file_size = #{fileSize}
+            </if>
+            <if test="filePath != null">
+                and file_path = #{filePath}
+            </if>
+            <if test="fileMd5 != null">
+                and file_md5 = #{fileMd5}
+            </if>
+            <if test="deleteTime != null">
+                and delete_time = #{deleteTime}
+            </if>
+            <if test="systemCode != null">
+                and system_code = #{systemCode}
+            </if>
+        </where>
+    </select>
+</mapper>

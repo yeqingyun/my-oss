@@ -1,0 +1,332 @@
+<!doctype html>
+<#include "/common/lib.ftl">
+    <html>
+    <head>
+        <base href="${base}"></base>
+        <meta charset="utf-8"/>
+        <title>文件管理</title>
+        <link rel="stylesheet" type="text/css" href="dev/css/themes/default/easyui.css"/>
+        <link rel="stylesheet" type="text/css" href="dev/css/main.css"/>
+        <script type="text/javascript" src="dev/js/jquery.min.js"></script>
+        <script type="text/javascript" src="dev/js/jquery.easyui.min.js"></script>
+        <script type="text/javascript" src="dev/js/locale/easyui-lang-zh_CN.js"></script>
+    </head>
+    <body>
+    <div class="easyui-layout" id="fileSearch${rand}" data-options="fit:true" style="">
+        <div data-options="region:'north',border:false" style="height:40px;padding:10px;">
+            <div class="sitem">
+                <label>文件名：</label><input name="name" id="fileName${rand}" type="text" class="easyui-validatebox"/>
+                <label>所属系统：</label>
+                <input id="systemCode${rand}" style="width: 160px" class="easyui-combobox"
+                       name="systemCode"
+                       url="tripartiteSystem/loadSystem.json"
+                       valueField="code"
+                       textField="name"
+                       multiple="true"
+                       panelHeight="auto"/>
+                <label>上传日期：</label><input name="uploadTime" id="uploadTime${rand}" style="width: 130px" type="text" class="easyui-datebox">
+            </div>
+            <a id="search${rand}" class="easyui-linkbutton" data-options="iconCls:'icon-search'">查询</a>
+        </div>
+        <div data-options="region:'center',border:false" style="padding:10px;">
+            <table id="tb${rand}"></table>
+        </div>
+    </div>
+
+    <div id="upload-${rand}" class="easyui-dialog" title="上传附件"
+         data-options="iconCls:'icon-save',resizable:true,width:708,height:544,modal:true,closed:true,
+        	buttons: [{
+                    text:'完成',
+                    iconCls:'icon-ok',
+                    handler: closeUploadDiag${rand}
+                }]
+        ">
+
+        <div id="uploader${rand}" class="fileUploader">
+            <div id="systemWarp${rand}" style="padding-bottom: 10px;text-align: center;padding-top: 15px">
+                <label>所属系统：</label>
+                <input id="system${rand}" style="width: 160px" class="easyui-combobox"
+                       name="systemCode"
+                       url="tripartiteSystem/loadSystem.json"
+                       valueField="code"
+                       textField="name"
+                       panelHeight="auto" />
+                <label>文件状态：</label>
+                <select id="fileStatus${rand}" value="0" class="easyui-combobox" style="width: 100px" panelHeight="auto">
+                    <option value="0">永久</option>
+                    <option value="1">临时</option>
+                </select>
+            </div>
+            <div id="fileList${rand}" class="uploader-list"></div>
+            <table style="width: 100%;text-align: center;padding-top: 20px;">
+                <tr>
+                    <td align="right"><div id="filePicker${rand}">选择文件</div></td>
+                    <td align="left"><a id="ctlBtn${rand}" href="javascript:void(0)" class='btn'>开始上传</a></td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+    <div id="generateLink-${rand}" class="easyui-dialog" title="生成外链"
+         data-options="iconCls:'icon-save',resizable:true,width:500,height:270,modal:true,closed:true,
+        	buttons: [{
+                    text:'生成',
+                    iconCls:'icon-ok',
+                    handler: generateLinkHandle${rand}
+                },{
+                    text:'完成',
+                    iconCls:'icon-ok',
+                    handler: closeLinkDiag${rand}
+                }]
+        ">
+        <div style="padding-left: 110px">
+            <div style="margin: 20px 0">
+                <label>链接过期时间:</label>
+                <input id="fileIdtoLink${rand}" type="hidden"/>
+                <input id="linkOverTime${rand}" class="easyui-datetimebox" name="birthday"
+                       data-options="required:true,showSeconds:false" />
+            </div>
+            <div style="margin: 20px 0">
+                <label>链接下载次数:</label>
+                <input id="linkDownloadCount${rand}" type="text" class="easyui-numberbox" value="100" data-options="min:0" />
+            </div>
+            <div style="margin: 20px 0;padding-left: 25px;">
+                <label>访问方式:</label>
+                <select style="width: 173px;" id="downloadType${rand}" value="0" class="easyui-combobox" style="width: 100px" panelHeight="auto">
+                    <option value="0">下载</option>
+                    <option value="1">预览</option>
+                </select>
+            </div>
+            <div style="margin: 20px 0">
+                <label style="padding-left: 50px">链接:</label>
+                <input id="linkVal-${rand}" type="text"/>
+                <a style="padding-left: 10px" href="javascript:void(0)" data-clipboard-target="#linkVal-${rand}" id="copyLink${rand}">复制</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        var tb;
+
+        function closeUploadDiag${rand}(){
+            $('#upload-${rand}').dialog('close');
+            tb.edatagrid('load', {
+                name: $('#fileName${rand}').val(),
+                systemCode: $('#systemCode${rand}').combobox('getValues').join(","),
+                updateTime: $('#fileSearch${rand} input[name="uploadTime"]').val()
+            });
+        }
+
+        function closeLinkDiag${rand}(){
+            $('#generateLink-${rand}').dialog('close');
+
+        }
+
+        //生成外链
+        function generateLinkHandle${rand}(){
+
+            var overTime = $("#linkOverTime${rand}").datetimebox('getValue') ? new Date($("#linkOverTime${rand}").datetimebox('getValue')).getTime() : 0;
+            var downloadCount = $("#linkDownloadCount${rand}").val() ? $("#linkDownloadCount${rand}").val() : 0;
+            var downloadType = $("#downloadType${rand}").combobox('getValue') ? $("#downloadType${rand}").combobox('getValue') : 0;
+            $.get('adminOperateFile/generateFileLink.html',{
+                id: $("#fileIdtoLink${rand}").val(),
+                overTime: overTime,
+                downloadCount: downloadCount,
+                downloadType: downloadType
+            },function(response){
+                response = JSON.parse(response);
+                if(response.isSuccess){
+                    $("#linkVal-${rand}").val(response.attributes.link);
+                } else {
+                    $.messager.alert('提示', response.message, 'error');
+                }
+            });
+
+        }
+
+
+
+
+
+
+        $(function () {
+            tb = $('#tb${rand}');
+            var btn = $('#search${rand}');
+
+            btn.bind('click', function () {
+                tb.edatagrid('load', {
+                    name: $('#fileName${rand}').val(),
+                    systemCode: $('#systemCode${rand}').combobox('getValues').join(","),
+                    updateTime: $('#fileSearch${rand} input[name="uploadTime"]').val()
+                });
+            });
+
+            $("#upload-${rand}").dialog({
+                onClose: function () {
+                    tb.edatagrid('load', {
+                        name: $('#fileName${rand}').val(),
+                        systemCode: $('#systemCode${rand}').combobox('getValues').join(","),
+                        updateTime: $('#fileSearch${rand} input[name="uploadTime"]').val()
+                    });
+                }
+            });
+
+
+            function edit() {
+                var gridData = tb.datagrid('getSelected');
+                if (gridData == null) {
+                    $.messager.show({title: '提示', msg: '未选择数据'});
+                    return;
+                }
+                tb.edatagrid('editRow', tb.datagrid('getRowIndex', gridData));
+            }
+
+            function save() {
+                tb.edatagrid('saveRow');
+            }
+
+            function remove() {
+                tb.edatagrid('destroyRow');
+            }
+
+            //上传新文件
+            function upload(){
+                $("#systemWarp${rand}").show();
+                $("#upload-${rand}").dialog('open');
+                clearFileList();
+                uploader${rand}.multiple = true;
+            }
+
+
+            var tmpTypes = [{text:'永久',value:'0'},{text:'临时',value:'1'}];
+            tb.edatagrid({
+                    fit: true,
+                    idField: 'id',
+                    pagination: true,
+                    fitColumns: false,
+                    columns: [[
+                        {field: 'id', checkbox: true},
+                        {field: 'name', title: '文件名',width:150, editor: {type: 'validatebox', options: {required: true}}},
+                        {field: 'md5', title: 'md5',width:150},
+                        {
+                            field: 'size', title: '文件大小',
+                            formatter: function (value) {
+                                return (value).formatSize();
+                            }
+                        },
+                        {field: 'path', title: '存放路径', width:300, editor: {type: 'validatebox', options: {required: false}}},
+                        {field: 'refer', title: '文件引用', editor: {type: 'validatebox', options: {required: false}}},
+                        {field: 'tmp', title: '文件状态',
+                            editor: {
+                                type: 'combobox',
+                                options:{
+                                    data:tmpTypes,
+                                    required:true,
+                                    editable: false
+                                }
+                            },
+                            formatter: function (value) {
+                                return value == 0 ?'永久':'临时';
+                            }
+                        },
+                        {field: 'remark', title: '所属系统'},
+                        {field: 'systemCode', title: '系统编码'},
+                        {
+                            field: 'updateTime', title: '上传时间',
+                            formatter: function (value) {
+                                return value.split(' ')[0];
+                            }
+                        },{
+                            field: 'operate', title: '操作',
+                            formatter: function (value, row) {
+                                return '<a target="_blank" href="fileManager/download.html?id='+row.id+'&type=1">预览</a>' +
+                                '&nbsp;&nbsp;<a href="fileManager/download.html?id='+row.id+'">下载</a>' +
+                                '&nbsp;&nbsp;<a href="javascript:void(0)" data-id="'+row.id+'" class="replace-${rand}">替换</a>'+
+                                '&nbsp;&nbsp;<a href="javascript:void(0)" data-id="'+row.id+'" class="link-${rand}">外链</a>';
+                            }
+                        }
+                    ]],
+                    url: 'fileManager/list.json',
+                    saveUrl: 'fileManager/save.json',
+                    updateUrl: 'fileManager/save.json',
+                    destroyUrl: 'fileManager/remove.json',
+                    onError: function (index, data) {
+                        $.messager.alert('错误', data.message);
+                    },
+                    onLoadSuccess: function (data) {
+
+                        //替换
+                        $(".replace-${rand}").click(function(){
+                            var fileId = $(this).attr("data-id");
+                            uploader${rand}.fileId = fileId;
+                            uploader${rand}.code = '';
+                            uploader${rand}.multiple = false;
+                            $("#systemWarp${rand}").hide();
+                            //清空文件列表
+
+                            clearFileList();
+                            $("#upload-${rand}").dialog('open');
+                        });
+                        //外链
+                        $(".link-${rand}").click(function(){
+                            $("#fileIdtoLink${rand}").val($(this).attr("data-id"));
+                            $("#linkVal-${rand}").val('');
+                            $("#linkDownloadCount${rand}").val('');
+                            $("#linkOverTime${rand}").datetimebox('setValue', '');
+                            $("#generateLink-${rand}").dialog('open');
+                        });
+
+                    },
+                    <@toolbar 'file_manager' />
+            });
+
+            var gnifUpload${rand} = new GnifFileUpload();
+
+            var uploader${rand} = gnifUpload${rand}.init(
+                "js/fileupload/Uploader.swf",
+                "filePicker${rand}",
+                "fileList${rand}",
+                "ctlBtn${rand}",
+                "upload-${rand}",
+                uploadCallBack,
+                '${base}'
+            );
+
+            function uploadCallBack(){
+
+            }
+
+            function clearFileList(){
+                gnifUpload${rand}.clearFileList($("#fileList${rand}"));
+            }
+
+
+            $("#system${rand}").combobox({
+
+                onChange: function (val) {
+                    uploader${rand}.code = val;
+                }
+
+            });
+
+            $("#fileStatus${rand}").combobox({
+
+                onChange: function (val) {
+                    uploader${rand}.tmp = val;
+                }
+
+            });
+            var clipboard = new Clipboard("#copyLink${rand}");
+
+            clipboard.on('success', function(e) {
+                e.clearSelection();
+                $.messager.show({title: '提示', msg: '已复制到剪切板'});
+            });
+
+        });
+
+    </script>
+    </body>
+    </html>

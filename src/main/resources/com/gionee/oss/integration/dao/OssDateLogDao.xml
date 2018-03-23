@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gionee.oss.integration.dao.OssDateLogDao">
+
+    <sql id="columns">
+        download, upload, upload_tmp, delete_,  clear , date_,
+        status, remark, create_by, create_time, update_by, update_time
+    </sql>
+
+    <resultMap type="com.gionee.oss.biz.model.OssDateLog" id="result">
+        <result property="download" column="download"/>
+        <result property="upload" column="upload"/>
+        <result property="uploadTmp" column="upload_tmp"/>
+        <result property="delete" column="delete_"/>
+        <result property="clear" column="clear"/>
+        <result property="date" column="date_"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gionee.oss.biz.model.OssDateLog">
+        insert into oss_date_log (<include refid="columns"/>) values (
+        #{download},
+        #{upload},
+        #{uploadTmp},
+        #{delete},
+        #{clear},
+        #{date},
+        #{normalStatus},
+        #{remark,jdbcType=VARCHAR},
+        #{currentAccount},
+        #{currentTime},
+        #{currentAccount},
+        #{currentTime}
+        )
+    </insert>
+
+    <update id="update" parameterType="com.gionee.oss.biz.model.OssDateLog">
+        update oss_date_log
+        <set>
+            <if test="download != null">
+                download = #{download},
+            </if>
+            <if test="upload != null">
+                upload = #{upload},
+            </if>
+            <if test="uploadTmp != null">
+                upload_tmp = #{uploadTmp},
+            </if>
+            <if test="delete != null">
+                delete_ = #{delete},
+            </if>
+            <if test="clear != null">
+                clear = #{clear},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            update_by = #{currentAccount},
+            update_time = #{currentTime}
+        </set>
+        where date_ = #{date}
+    </update>
+
+    <delete id="delete" parameterType="Date">
+        delete from oss_date_log where date_ = #{_parameter}
+    </delete>
+
+    <select id="get" parameterType="Date" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_date_log
+        where date_ = DATE_FORMAT(#{_parameter},'%Y-%m-%d')
+    </select>
+
+    <select id="getExcept" parameterType="Date" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_date_log
+        <where>
+            <if test="_parameter != null">
+                date_ != DATE_FORMAT(#{_parameter},'%Y-%m-%d')
+            </if>
+        </where>
+        order by date_ desc
+    </select>
+
+    <select id="getPage" parameterType="map" resultMap="result">
+        select
+          <include refid="columns"/>
+        from oss_date_log
+        <where>
+            <if test="download != null">
+                and download = #{download}
+            </if>
+            <if test="upload != null">
+                and upload = #{upload}
+            </if>
+            <if test="date != null">
+                and date_ = #{date}
+            </if>
+        </where>
+        order by date_ desc
+        limit #{firstResult},#{pageRow}
+    </select>
+    <select id="getPageCount" parameterType="map" resultType="int">
+        select count(date_) from oss_date_log
+        <where>
+            <if test="download != null">
+                and download = #{download}
+            </if>
+            <if test="upload != null">
+                and upload = #{upload}
+            </if>
+            <if test="date != null">
+                and date_ = #{date}
+            </if>
+        </where>
+    </select>
+
+    <select id="getAll" parameterType="map" resultMap="result">
+        select
+        <include refid="columns"/>
+        from oss_date_log
+        <where>
+            <if test="download != null">
+                and download = #{download}
+            </if>
+            <if test="upload != null">
+                and upload = #{upload}
+            </if>
+            <if test="date != null">
+                and date_ = #{date}
+            </if>
+        </where>
+    </select>
+
+</mapper>
