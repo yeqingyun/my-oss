@@ -41,7 +41,7 @@ public class SystemKeyCache implements Cache<String, OssTripartiteSystem> {
     }
 
 
-    public void init() {
+    public synchronized void init() {
         logger.info("SystemKeyCache init. . .");
         List<OssTripartiteSystem> os = ossTripartiteSystemService.query(new QueryMap());
         for (OssTripartiteSystem system : os) {
@@ -74,18 +74,18 @@ public class SystemKeyCache implements Cache<String, OssTripartiteSystem> {
         for (int i = 0; i <= count; i++) {
             //年月
             String dm = DateUtil.getDateYearMonth(date, i);
-            String mothpath = new StringBuilder(dirPath).append(PropertiesConfig.fileSeparator).append(dm).toString();
-            File monthFile = new File(mothpath);
+            String mothPath = new StringBuilder(dirPath).append(PropertiesConfig.fileSeparator).append(dm).toString();
+            File monthFile = new File(mothPath);
             if (!monthFile.exists()) {
                 synchronized (this) {
                     if (monthFile.mkdir()) {
-                        logger.info(mothpath + " created. . .");
+                        logger.info(mothPath + " created. . .");
                     } else {
-                        logger.error(mothpath + " create failed. . .");
+                        logger.error(mothPath + " create failed. . .");
                     }
                 }
             } else {
-                logger.info(mothpath + " exited. . .");
+                logger.info(mothPath + " exited. . .");
             }
         }
     }
@@ -97,11 +97,16 @@ public class SystemKeyCache implements Cache<String, OssTripartiteSystem> {
     public OssTripartiteSystem getAndSysnc(String code) {
         OssTripartiteSystem ossTripartiteSystem = this.get(code);
         if (ossTripartiteSystem == null) {
-            ossTripartiteSystem = ossTripartiteSystemService.getByCode(code);
-            if (ossTripartiteSystem != null) {
-                this.set(code, ossTripartiteSystem);
-            } else {//系统编码不存在
-                return null;
+            synchronized (this) {
+                ossTripartiteSystem = this.get(code);
+                if (ossTripartiteSystem == null) {
+                    ossTripartiteSystem = ossTripartiteSystemService.getByCode(code);
+                    if (ossTripartiteSystem != null) {
+                        this.set(code, ossTripartiteSystem);
+                    } else {//系统编码不存在
+                        return null;
+                    }
+                }
             }
         }
         return ossTripartiteSystem;
